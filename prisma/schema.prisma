@@ -1,0 +1,392 @@
+// Ramforge — Prisma schema (PostgreSQL).
+// Schema only for the scaffold; no migrations are required to build/run.
+// Money is always stored as integer MINOR UNITS (e.g. cents) — never floats.
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ---------------------------------------------------------------------------
+// Enums
+// ---------------------------------------------------------------------------
+
+enum Role {
+  SUPER_ADMIN
+  STORE_MANAGER
+  CONTENT_UPLOADER
+  SUPPORT_STAFF
+  CUSTOMER
+}
+
+enum AccessMode {
+  FREE
+  PAID
+  MEMBERS
+}
+
+enum EntitlementType {
+  STREAM
+  DOWNLOAD
+  RENTAL
+}
+
+enum VideoQuality {
+  SD
+  HD
+  UHD_4K
+}
+
+enum VideoStatus {
+  DRAFT
+  PUBLISHED
+  ARCHIVED
+}
+
+enum OrderStatus {
+  PENDING
+  PAID
+  FAILED
+  REFUNDED
+  PARTIALLY_REFUNDED
+}
+
+enum CouponType {
+  PERCENT
+  FIXED
+}
+
+// ---------------------------------------------------------------------------
+// Auth (NextAuth v5 / Auth.js adapter models) + users
+// ---------------------------------------------------------------------------
+
+model User {
+  id            String    @id @default(cuid())
+  name          String?
+  email         String    @unique
+  emailVerified DateTime?
+  image         String?
+  passwordHash  String?
+  role          Role      @default(CUSTOMER)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  accounts         Account[]
+  sessions         Session[]
+  orders           Order[]
+  purchases        Purchase[]      @relation("UserPurchases")
+  grantedPurchases Purchase[]      @relation("GrantedBy")
+  favourites       Favourite[]
+  reviews          Review[]
+  watchSessions    WatchSession[]
+  activityLogs     ActivityLog[]
+
+  @@index([role])
+}
+
+model Account {
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String?
+  access_token      String?
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String?
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([provider, providerAccountId])
+}
+
+model Session {
+  sessionToken String   @id
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model VerificationToken {
+  identifier String
+  token      String
+  expires    DateTime
+
+  @@id([identifier, token])
+}
+
+// ---------------------------------------------------------------------------
+// Catalog
+// ---------------------------------------------------------------------------
+
+model Category {
+  id          String  @id @default(cuid())
+  name        String
+  slug        String  @unique
+  description String?
+  icon        String?
+  parentId    String?
+  parent      Category?  @relation("CategoryTree", fields: [parentId], references: [id])
+  children    Category[] @relation("CategoryTree")
+  videos      Video[]
+  createdAt   DateTime   @default(now())
+
+  @@index([parentId])
+}
+
+model Video {
+  id             String       @id @default(cuid())
+  title          String
+  slug           String       @unique
+  description    String
+  tags           String[]
+  categoryId     String
+  category       Category     @relation(fields: [categoryId], references: [id])
+  thumbnailUrl   String?
+  previewAssetId String?
+  fullAssetId    String?
+  durationSec    Int          @default(0)
+  quality        VideoQuality @default(HD)
+  fileSizeBytes  BigInt?
+  // Prices in minor units.
+  price          Int          @default(0)
+  salePrice      Int?
+  accessMode     AccessMode   @default(PAID)
+  allowDownload  Boolean      @default(false)
+  rentalDays     Int?
+  status         VideoStatus  @default(DRAFT)
+  viewCount      Int          @default(0)
+  publishedAt    DateTime?
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+
+  bundleLinks BundleVideo[]
+  orderItems  OrderItem[]
+  purchases   Purchase[]
+  favourites  Favourite[]
+  reviews     Review[]
+  watch       WatchSession[]
+
+  @@index([categoryId])
+  @@index([status])
+}
+
+model Bundle {
+  id           String        @id @default(cuid())
+  title        String
+  slug         String        @unique
+  description  String
+  thumbnailUrl String?
+  price        Int           @default(0)
+  salePrice    Int?
+  status       VideoStatus   @default(DRAFT)
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+  videos       BundleVideo[]
+  orderItems   OrderItem[]
+}
+
+model BundleVideo {
+  bundleId String
+  videoId  String
+  position Int    @default(0)
+  bundle   Bundle @relation(fields: [bundleId], references: [id], onDelete: Cascade)
+  video    Video  @relation(fields: [videoId], references: [id], onDelete: Cascade)
+
+  @@id([bundleId, videoId])
+}
+
+// ---------------------------------------------------------------------------
+// Commerce
+// ---------------------------------------------------------------------------
+
+model Order {
+  id       String      @id @default(cuid())
+  userId   String
+  user     User        @relation(fields: [userId], references: [id])
+  status   OrderStatus @default(PENDING)
+  // Amounts in minor units.
+  subtotal Int         @default(0)
+  taxTotal Int         @default(0)
+  total    Int         @default(0)
+  currency String      @default("USD")
+  couponId String?
+  coupon   Coupon?     @relation(fields: [couponId], references: [id])
+
+  stripePaymentIntentId String?
+  stripeCheckoutId      String?
+
+  // EU/consumer digital-goods cancellation waiver, captured at checkout.
+  waiverConsent   Boolean   @default(false)
+  waiverConsentAt DateTime?
+
+  invoiceNumber String?
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+
+  items     OrderItem[]
+  purchases Purchase[]
+
+  @@index([userId])
+  @@index([status])
+}
+
+model OrderItem {
+  id       String          @id @default(cuid())
+  orderId  String
+  order    Order           @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  videoId  String?
+  video    Video?          @relation(fields: [videoId], references: [id])
+  bundleId String?
+  bundle   Bundle?         @relation(fields: [bundleId], references: [id])
+  type     EntitlementType @default(STREAM)
+  // Snapshot of unit price (minor units) at purchase time.
+  unitPrice  Int
+  quantity   Int             @default(1)
+  rentalDays Int?
+
+  @@index([orderId])
+}
+
+/// A granted entitlement — purchased or manually granted by staff.
+model Purchase {
+  id        String          @id @default(cuid())
+  userId    String
+  user      User            @relation("UserPurchases", fields: [userId], references: [id])
+  videoId   String
+  video     Video           @relation(fields: [videoId], references: [id])
+  orderId   String?
+  order     Order?          @relation(fields: [orderId], references: [id])
+  type      EntitlementType @default(STREAM)
+  expiresAt DateTime?
+  downloadCount Int         @default(0)
+  downloadLimit Int?
+  revokedAt     DateTime?
+  // Set when access was granted manually (not via a paid order).
+  grantedById String?
+  grantedBy   User?     @relation("GrantedBy", fields: [grantedById], references: [id])
+  createdAt   DateTime  @default(now())
+
+  @@unique([userId, videoId, type])
+  @@index([userId])
+  @@index([videoId])
+}
+
+/// Playback session, used to enforce concurrent-device limits.
+model WatchSession {
+  id            String    @id @default(cuid())
+  userId        String
+  user          User      @relation(fields: [userId], references: [id])
+  videoId       String
+  video         Video     @relation(fields: [videoId], references: [id])
+  deviceLabel   String?
+  ipHash        String?
+  lastHeartbeat DateTime  @default(now())
+  endedAt       DateTime?
+  createdAt     DateTime  @default(now())
+
+  @@index([userId])
+  @@index([videoId])
+}
+
+model Favourite {
+  userId    String
+  videoId   String
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  video     Video    @relation(fields: [videoId], references: [id], onDelete: Cascade)
+
+  @@id([userId, videoId])
+}
+
+model Review {
+  id        String   @id @default(cuid())
+  videoId   String
+  video     Video    @relation(fields: [videoId], references: [id], onDelete: Cascade)
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  rating    Int
+  title     String?
+  body      String
+  approved  Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  @@unique([videoId, userId])
+  @@index([videoId])
+}
+
+// ---------------------------------------------------------------------------
+// Marketing & content
+// ---------------------------------------------------------------------------
+
+model Coupon {
+  id         String     @id @default(cuid())
+  code       String     @unique
+  type       CouponType @default(PERCENT)
+  // PERCENT: 0–100; FIXED: minor units.
+  amount     Int
+  active     Boolean    @default(true)
+  maxRedemptions Int?
+  timesRedeemed  Int    @default(0)
+  startsAt   DateTime?
+  expiresAt  DateTime?
+  createdAt  DateTime   @default(now())
+  orders     Order[]
+}
+
+model Banner {
+  id        String   @id @default(cuid())
+  title     String
+  subtitle  String?
+  eyebrow   String?
+  imageUrl  String
+  ctaLabel  String?
+  ctaHref   String?
+  position  Int      @default(0)
+  active    Boolean  @default(true)
+  createdAt DateTime @default(now())
+}
+
+model EmailTemplate {
+  id        String   @id @default(cuid())
+  key       String   @unique
+  name      String
+  subject   String
+  body      String
+  updatedAt DateTime @updatedAt
+}
+
+model ActivityLog {
+  id        String   @id @default(cuid())
+  userId    String?
+  user      User?    @relation(fields: [userId], references: [id])
+  action    String
+  entity    String?
+  entityId  String?
+  metadata  Json?
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+  @@index([entity, entityId])
+}
+
+model Setting {
+  key       String   @id
+  value     Json
+  updatedAt DateTime @updatedAt
+}
+
+model NewsletterSubscriber {
+  id           String    @id @default(cuid())
+  email        String    @unique
+  confirmed    Boolean   @default(false)
+  unsubscribedAt DateTime?
+  createdAt    DateTime  @default(now())
+}

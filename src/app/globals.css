@@ -1,26 +1,265 @@
 @import "tailwindcss";
+@import "tw-animate-css";
 
+/* Class-based dark mode driven by next-themes (`<html class="dark">`). */
+@custom-variant dark (&:is(.dark *));
+
+/* ---------------------------------------------------------------------------
+ * Design tokens — single source of truth.
+ * Colours are authored in OKLCH for perceptually-even light/dark pairs.
+ * Light theme lives on :root, dark theme overrides on .dark.
+ * ------------------------------------------------------------------------- */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --radius: 0.65rem;
+
+  --background: oklch(0.99 0.004 70);
+  --foreground: oklch(0.2 0.01 60);
+
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.2 0.01 60);
+
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.2 0.01 60);
+
+  /* Brand: forge orange */
+  --primary: oklch(0.63 0.19 45);
+  --primary-foreground: oklch(0.99 0.01 70);
+
+  --secondary: oklch(0.965 0.008 70);
+  --secondary-foreground: oklch(0.28 0.02 50);
+
+  --muted: oklch(0.965 0.006 70);
+  --muted-foreground: oklch(0.52 0.015 60);
+
+  --accent: oklch(0.95 0.04 60);
+  --accent-foreground: oklch(0.35 0.08 45);
+
+  --destructive: oklch(0.58 0.22 22);
+  --destructive-foreground: oklch(0.985 0 0);
+
+  --success: oklch(0.6 0.14 150);
+  --success-foreground: oklch(0.985 0 0);
+
+  --warning: oklch(0.78 0.15 75);
+  --warning-foreground: oklch(0.28 0.06 75);
+
+  --border: oklch(0.9 0.006 70);
+  --input: oklch(0.9 0.006 70);
+  --ring: oklch(0.63 0.19 45);
+
+  /* Categorical chart palette (stat cards, reports). */
+  --chart-1: oklch(0.63 0.19 45);
+  --chart-2: oklch(0.6 0.12 215);
+  --chart-3: oklch(0.68 0.15 160);
+  --chart-4: oklch(0.8 0.15 95);
+  --chart-5: oklch(0.6 0.2 2);
+
+  /* Admin sidebar surface. */
+  --sidebar: oklch(0.985 0.004 70);
+  --sidebar-foreground: oklch(0.3 0.015 60);
+  --sidebar-primary: oklch(0.63 0.19 45);
+  --sidebar-primary-foreground: oklch(0.99 0.01 70);
+  --sidebar-accent: oklch(0.95 0.04 60);
+  --sidebar-accent-foreground: oklch(0.35 0.08 45);
+  --sidebar-border: oklch(0.9 0.006 70);
+  --sidebar-ring: oklch(0.63 0.19 45);
 }
 
+.dark {
+  /* Cinematic near-black with a faint warm cast. */
+  --background: oklch(0.15 0.005 60);
+  --foreground: oklch(0.97 0.004 70);
+
+  --card: oklch(0.18 0.006 60);
+  --card-foreground: oklch(0.97 0.004 70);
+
+  --popover: oklch(0.17 0.006 60);
+  --popover-foreground: oklch(0.97 0.004 70);
+
+  --primary: oklch(0.7 0.19 48);
+  --primary-foreground: oklch(0.16 0.02 48);
+
+  --secondary: oklch(0.25 0.008 60);
+  --secondary-foreground: oklch(0.97 0.004 70);
+
+  --muted: oklch(0.24 0.006 60);
+  --muted-foreground: oklch(0.7 0.012 60);
+
+  --accent: oklch(0.3 0.05 50);
+  --accent-foreground: oklch(0.95 0.03 60);
+
+  --destructive: oklch(0.66 0.2 22);
+  --destructive-foreground: oklch(0.98 0 0);
+
+  --success: oklch(0.68 0.14 150);
+  --success-foreground: oklch(0.16 0.02 150);
+
+  --warning: oklch(0.82 0.15 75);
+  --warning-foreground: oklch(0.24 0.06 75);
+
+  --border: oklch(1 0 0 / 9%);
+  --input: oklch(1 0 0 / 13%);
+  --ring: oklch(0.7 0.19 48);
+
+  --chart-1: oklch(0.7 0.19 48);
+  --chart-2: oklch(0.68 0.12 215);
+  --chart-3: oklch(0.72 0.15 160);
+  --chart-4: oklch(0.82 0.15 95);
+  --chart-5: oklch(0.68 0.2 2);
+
+  --sidebar: oklch(0.17 0.006 60);
+  --sidebar-foreground: oklch(0.97 0.004 70);
+  --sidebar-primary: oklch(0.7 0.19 48);
+  --sidebar-primary-foreground: oklch(0.16 0.02 48);
+  --sidebar-accent: oklch(0.3 0.05 50);
+  --sidebar-accent-foreground: oklch(0.95 0.03 60);
+  --sidebar-border: oklch(1 0 0 / 9%);
+  --sidebar-ring: oklch(0.7 0.19 48);
+}
+
+/* ---------------------------------------------------------------------------
+ * Map tokens into Tailwind's theme so utilities like `bg-primary`,
+ * `text-muted-foreground`, `rounded-lg`, `border-border` resolve to them.
+ * ------------------------------------------------------------------------- */
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-success: var(--success);
+  --color-success-foreground: var(--success-foreground);
+  --color-warning: var(--warning);
+  --color-warning-foreground: var(--warning-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+
+  /* Square, condensed body/UI font (Rajdhani). */
+  --font-sans: var(--font-rajdhani), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-geist-mono), ui-monospace, monospace;
+  /* Maximum-square display font (Orbitron) for headings and the wordmark. */
+  --font-display: var(--font-orbitron), var(--font-rajdhani), ui-sans-serif, sans-serif;
+
+  /* Shared motion timings — keep JS (lib/motion.ts) and CSS in sync. */
+  --ease-emphasized: cubic-bezier(0.2, 0, 0, 1);
+  --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+
+  --animate-shimmer: shimmer 1.6s linear infinite;
+  @keyframes shimmer {
+    from {
+      background-position: -200% 0;
+    }
+    to {
+      background-position: 200% 0;
+    }
+  }
+
+  /* Smooth accordion expand/collapse (uses Radix's measured content height). */
+  --animate-accordion-down: accordion-down 0.25s var(--ease-emphasized);
+  --animate-accordion-up: accordion-up 0.25s var(--ease-emphasized);
+  @keyframes accordion-down {
+    from {
+      height: 0;
+      opacity: 0;
+    }
+    to {
+      height: var(--radix-accordion-content-height);
+      opacity: 1;
+    }
+  }
+  @keyframes accordion-up {
+    from {
+      height: var(--radix-accordion-content-height);
+      opacity: 1;
+    }
+    to {
+      height: 0;
+      opacity: 0;
+    }
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+/* ---------------------------------------------------------------------------
+ * Base layer.
+ * ------------------------------------------------------------------------- */
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  html {
+    scroll-behavior: smooth;
+    /* Reference the next/font variables directly (Tailwind `@theme inline`
+       tokens are not emitted as usable CSS variables). */
+    font-family: var(--font-rajdhani), ui-sans-serif, system-ui, sans-serif;
+  }
+  body {
+    @apply bg-background text-foreground antialiased;
+    text-rendering: optimizeLegibility;
+  }
+  /* Headings use the squared display font (Orbitron) for a technical feel. */
+  h1,
+  h2,
+  h3 {
+    font-family: var(--font-orbitron), var(--font-rajdhani), ui-sans-serif, sans-serif;
+  }
+  /* Consistent, accessible focus rings across interactive elements. */
+  :focus-visible {
+    @apply outline-ring outline-2 outline-offset-2;
+  }
+
+  /* Honour the user's reduced-motion preference everywhere. */
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    ::before,
+    ::after {
+      animation-duration: 0.001ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.001ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
+}
+
+/* Reusable shimmer surface for skeletons. */
+@utility skeleton-shimmer {
+  background-image: linear-gradient(
+    90deg,
+    transparent 0%,
+    color-mix(in oklch, var(--foreground) 8%, transparent) 50%,
+    transparent 100%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.6s linear infinite;
 }
