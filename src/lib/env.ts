@@ -8,23 +8,32 @@ import { z } from "zod";
  *   handlers, server actions). Importing them in a Client Component throws.
  * - `client` vars must be prefixed with `NEXT_PUBLIC_` and are safe to ship.
  *
- * Validation runs at import time (and at build time via `next.config.ts`).
- * Set `SKIP_ENV_VALIDATION=1` to bypass validation (e.g. for Docker builds).
+ * SCAFFOLD NOTE: required vars fall back to **safe placeholder defaults** so the
+ * app builds and runs on mock data without any secrets configured (e.g. a first
+ * Vercel deploy). Override every placeholder with real values in production —
+ * the defaults are insecure and non-functional. Tighten these to hard
+ * requirements (remove the `.default(...)`) once real services are wired.
+ *
+ * Set `SKIP_ENV_VALIDATION=1` to bypass validation entirely.
  */
 export const env = createEnv({
   server: {
     NODE_ENV: z.enum(["development", "test", "production"]).default("development"),
 
-    // Database (Prisma + PostgreSQL)
-    DATABASE_URL: z.string().url(),
+    // Database (Prisma + PostgreSQL). Prisma reads DATABASE_URL directly via the
+    // schema; this entry only validates its presence/shape.
+    DATABASE_URL: z
+      .string()
+      .url()
+      .default("postgresql://user:password@localhost:5432/ramforge?schema=public"),
 
     // Auth.js (NextAuth v5)
-    AUTH_SECRET: z.string().min(1),
+    AUTH_SECRET: z.string().min(1).default("dev-insecure-secret-change-me-in-production"),
     AUTH_URL: z.string().url().optional(),
 
     // Stripe (server-side)
-    STRIPE_SECRET_KEY: z.string().min(1),
-    STRIPE_WEBHOOK_SECRET: z.string().min(1),
+    STRIPE_SECRET_KEY: z.string().min(1).default("stripe-secret-key-not-set"),
+    STRIPE_WEBHOOK_SECRET: z.string().min(1).default("stripe-webhook-secret-not-set"),
 
     // Transactional email
     EMAIL_FROM: z.string().email().optional(),
@@ -35,8 +44,8 @@ export const env = createEnv({
     VIDEO_SIGNING_KEY: z.string().optional(),
   },
   client: {
-    NEXT_PUBLIC_APP_URL: z.string().url(),
-    NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY: z.string().min(1),
+    NEXT_PUBLIC_APP_URL: z.string().url().default("http://localhost:3000"),
+    NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY: z.string().min(1).default("stripe-publishable-key-not-set"),
   },
   /**
    * Destructure here so Next.js can statically inline `NEXT_PUBLIC_*` values.
