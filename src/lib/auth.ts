@@ -17,6 +17,9 @@ import Credentials from "next-auth/providers/credentials";
  */
 export const authConfig = {
   secret: env.AUTH_SECRET,
+  // Trust the deployment host (required on Vercel/proxied hosts where AUTH_URL
+  // isn't set) to avoid NextAuth's `UntrustedHost` error on /api/auth/*.
+  trustHost: true,
   session: { strategy: "jwt" },
   pages: {
     signIn: "/login",
