@@ -41,8 +41,10 @@ const securityHeaders = [
 ];
 
 const nextConfig: NextConfig = {
-  cacheComponents: true,
-  partialPrefetching: true,
+  // NOTE: the experimental `cacheComponents` / `partialPrefetching` flags were
+  // removed — their PPR build output was not being served correctly on Vercel
+  // (every route, including static assets, 404'd). Standard rendering deploys
+  // reliably. Re-enable once the platform fully supports them.
   turbopack: {
     rules: {
       "*.css": {
