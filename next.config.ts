@@ -56,6 +56,9 @@ const nextConfig: NextConfig = {
     remotePatterns: [
       { protocol: "https", hostname: "images.unsplash.com" },
       { protocol: "https", hostname: "picsum.photos" },
+      { protocol: "https", hostname: "*.alphacoders.com" },
+      { protocol: "https", hostname: "*.peakpx.com" },
+      { protocol: "https", hostname: "4kwallpapers.com" },
       { protocol: "https", hostname: "image.mux.com" },
       { protocol: "https", hostname: "*.b-cdn.net" },
       { protocol: "https", hostname: "*.r2.cloudflarestorage.com" },
