@@ -1,4 +1,4 @@
-// Ramforge — Prisma schema (PostgreSQL).
+// FrameForge — Prisma schema (PostgreSQL).
 // Schema only for the scaffold; no migrations are required to build/run.
 // Money is always stored as integer MINOR UNITS (e.g. cents) — never floats.
 

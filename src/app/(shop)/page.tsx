@@ -9,18 +9,12 @@ import { CategoryChip } from "@/components/shared/category-chip";
 import { VideoCard } from "@/components/shared/video-card";
 import { VideoGrid } from "@/components/shared/video-grid";
 import { buildMetadata } from "@/lib/seo";
-import {
-  mockBanners,
-  mockBlogPosts,
-  mockBundles,
-  mockCategories,
-  mockVideos,
-} from "@/mocks";
+import { mockBanners, mockBlogPosts, mockBundles, mockCategories, mockVideos } from "@/mocks";
 import type { Metadata } from "next";
 import { Clapperboard, Flame, Layers, Newspaper } from "lucide-react";
 
 export const metadata: Metadata = buildMetadata({
-  title: { absolute: "Ramforge — Learn. Practice. Master." },
+  title: { absolute: "FrameForge — Learn. Create. Composite." },
 });
 
 export default function HomePage() {
@@ -45,12 +39,14 @@ export default function HomePage() {
             <HeroCarousel banners={banners} />
             <PromoCard
               eyebrow="Toolkit"
-              title="Ramforge Toolkit"
+              title="FrameForge Toolkit"
               description="Powerful gizmos and scripts for faster compositing."
               imageUrl="https://picsum.photos/seed/toolkit/640/360"
               features={["Essential Gizmos", "Python Scripts", "Node Templates", "Workflow Tools"]}
               ctaLabel="Browse tools"
               ctaHref="/shop?category=compositing"
+              donateLabel="Donate"
+              donateHref="/donate"
               className="hidden lg:flex"
             />
           </section>
@@ -90,11 +86,7 @@ export default function HomePage() {
 
           {/* New releases */}
           <section className="flex flex-col gap-4">
-            <SectionHeader
-              title="New releases"
-              icon={<Flame />}
-              viewAllHref="/shop?sort=newest"
-            />
+            <SectionHeader title="New releases" icon={<Flame />} viewAllHref="/shop?sort=newest" />
             <FadeIn>
               <VideoGrid videos={newReleases} columns={4} />
             </FadeIn>

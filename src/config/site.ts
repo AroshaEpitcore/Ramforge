@@ -5,20 +5,20 @@ import { env } from "@/lib/env";
  * Change `name` here to rebrand the entire app.
  */
 export const siteConfig = {
-  name: "Ramforge",
-  tagline: "Learn. Practice. Master.",
+  name: "FrameForge",
+  tagline: "Learn. Create. Composite.",
   description:
     "Buy and watch premium VFX, compositing and filmmaking videos — stream, download or rent in HD and 4K.",
   url: env.NEXT_PUBLIC_APP_URL,
-  ogImage: "/og.png",
+  ogImage: "/opengraph-image",
   locale: "en",
   // Default display currency (prices are stored as integer minor units).
   currency: "USD",
-  supportEmail: "support@ramforge.test",
+  supportEmail: "support@frameforge.test",
   links: {
-    twitter: "https://twitter.com/ramforge",
-    youtube: "https://youtube.com/@ramforge",
-    github: "https://github.com/ramforge",
+    twitter: "https://twitter.com/frameforge",
+    youtube: "https://youtube.com/@frameforge",
+    github: "https://github.com/frameforge",
   },
 } as const;
 

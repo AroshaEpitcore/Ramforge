@@ -34,14 +34,13 @@ export function buildMetadata(overrides: Metadata = {}): Metadata {
       description: description ?? undefined,
       url: siteConfig.url,
       locale: siteConfig.locale,
-      images: [{ url: siteConfig.ogImage, width: 1200, height: 630, alt: siteConfig.name }],
+      // Images come from the app/opengraph-image convention unless overridden.
       ...overrides.openGraph,
     },
     twitter: {
       card: "summary_large_image",
       title: resolvedTitle,
       description: description ?? undefined,
-      images: [siteConfig.ogImage],
       ...overrides.twitter,
     },
     robots: {
@@ -49,7 +48,6 @@ export function buildMetadata(overrides: Metadata = {}): Metadata {
       follow: true,
       googleBot: { index: true, follow: true, "max-image-preview": "large" },
     },
-    icons: { icon: "/favicon.ico" },
     ...overrides,
   };
 }

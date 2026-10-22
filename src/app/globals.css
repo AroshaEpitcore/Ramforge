@@ -6,115 +6,118 @@
 
 /* ---------------------------------------------------------------------------
  * Design tokens — single source of truth.
- * Colours are authored in OKLCH for perceptually-even light/dark pairs.
- * Light theme lives on :root, dark theme overrides on .dark.
+ * Colours follow the FrameForge brand palette (see colour-reference PDF):
+ *   Obsidian Black #080A0D · Carbon Charcoal #11151B · Graphite #1B222B
+ *   Electric Orange #FF7900 · Cinematic Amber #FF9A42
+ *   Ice White #F5F7FA · Steel Grey #A8B0BA · Titanium Border #303640
+ * Light theme lives on :root, dark (the signature cinematic look) on .dark.
  * ------------------------------------------------------------------------- */
 :root {
   --radius: 0.65rem;
 
-  --background: oklch(0.99 0.004 70);
-  --foreground: oklch(0.2 0.01 60);
+  --background: #f5f7fa; /* Ice White */
+  --foreground: #080a0d; /* Obsidian Black */
 
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.2 0.01 60);
+  --card: #ffffff;
+  --card-foreground: #080a0d;
 
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.2 0.01 60);
+  --popover: #ffffff;
+  --popover-foreground: #080a0d;
 
-  /* Brand: forge orange */
-  --primary: oklch(0.63 0.19 45);
-  --primary-foreground: oklch(0.99 0.01 70);
+  /* Signature accent: Electric Orange */
+  --primary: #ff7900;
+  --primary-foreground: #080a0d;
 
-  --secondary: oklch(0.965 0.008 70);
-  --secondary-foreground: oklch(0.28 0.02 50);
+  --secondary: #eef1f5;
+  --secondary-foreground: #11151b;
 
-  --muted: oklch(0.965 0.006 70);
-  --muted-foreground: oklch(0.52 0.015 60);
+  --muted: #eef1f5;
+  --muted-foreground: #5b6472; /* darkened Steel Grey for AA on light */
 
-  --accent: oklch(0.95 0.04 60);
-  --accent-foreground: oklch(0.35 0.08 45);
+  --accent: #ffe8d4; /* soft amber tint */
+  --accent-foreground: #7a3b00;
 
-  --destructive: oklch(0.58 0.22 22);
-  --destructive-foreground: oklch(0.985 0 0);
+  --destructive: #dc2626;
+  --destructive-foreground: #ffffff;
 
-  --success: oklch(0.6 0.14 150);
-  --success-foreground: oklch(0.985 0 0);
+  --success: #16a34a;
+  --success-foreground: #ffffff;
 
-  --warning: oklch(0.78 0.15 75);
-  --warning-foreground: oklch(0.28 0.06 75);
+  --warning: #f59e0b;
+  --warning-foreground: #11151b;
 
-  --border: oklch(0.9 0.006 70);
-  --input: oklch(0.9 0.006 70);
-  --ring: oklch(0.63 0.19 45);
+  --border: #d7dce3;
+  --input: #d7dce3;
+  --ring: #ff7900;
 
   /* Categorical chart palette (stat cards, reports). */
-  --chart-1: oklch(0.63 0.19 45);
-  --chart-2: oklch(0.6 0.12 215);
-  --chart-3: oklch(0.68 0.15 160);
-  --chart-4: oklch(0.8 0.15 95);
-  --chart-5: oklch(0.6 0.2 2);
+  --chart-1: #ff7900; /* Electric Orange */
+  --chart-2: #2e86de;
+  --chart-3: #16a34a;
+  --chart-4: #ff9a42; /* Cinematic Amber */
+  --chart-5: #e0457b;
 
   /* Admin sidebar surface. */
-  --sidebar: oklch(0.985 0.004 70);
-  --sidebar-foreground: oklch(0.3 0.015 60);
-  --sidebar-primary: oklch(0.63 0.19 45);
-  --sidebar-primary-foreground: oklch(0.99 0.01 70);
-  --sidebar-accent: oklch(0.95 0.04 60);
-  --sidebar-accent-foreground: oklch(0.35 0.08 45);
-  --sidebar-border: oklch(0.9 0.006 70);
-  --sidebar-ring: oklch(0.63 0.19 45);
+  --sidebar: #ffffff;
+  --sidebar-foreground: #1b222b;
+  --sidebar-primary: #ff7900;
+  --sidebar-primary-foreground: #080a0d;
+  --sidebar-accent: #ffe8d4;
+  --sidebar-accent-foreground: #7a3b00;
+  --sidebar-border: #d7dce3;
+  --sidebar-ring: #ff7900;
 }
 
 .dark {
-  /* Cinematic near-black with a faint warm cast. */
-  --background: oklch(0.15 0.005 60);
-  --foreground: oklch(0.97 0.004 70);
+  /* Cinematic foundation — Obsidian Black with Carbon/Graphite surfaces. */
+  --background: #080a0d; /* Obsidian Black */
+  --foreground: #f5f7fa; /* Ice White */
 
-  --card: oklch(0.18 0.006 60);
-  --card-foreground: oklch(0.97 0.004 70);
+  --card: #11151b; /* Carbon Charcoal */
+  --card-foreground: #f5f7fa;
 
-  --popover: oklch(0.17 0.006 60);
-  --popover-foreground: oklch(0.97 0.004 70);
+  --popover: #1b222b; /* Graphite */
+  --popover-foreground: #f5f7fa;
 
-  --primary: oklch(0.7 0.19 48);
-  --primary-foreground: oklch(0.16 0.02 48);
+  --primary: #ff7900; /* Electric Orange */
+  --primary-foreground: #080a0d;
 
-  --secondary: oklch(0.25 0.008 60);
-  --secondary-foreground: oklch(0.97 0.004 70);
+  --secondary: #1b222b; /* Graphite */
+  --secondary-foreground: #f5f7fa;
 
-  --muted: oklch(0.24 0.006 60);
-  --muted-foreground: oklch(0.7 0.012 60);
+  --muted: #11151b;
+  --muted-foreground: #a8b0ba; /* Steel Grey */
 
-  --accent: oklch(0.3 0.05 50);
-  --accent-foreground: oklch(0.95 0.03 60);
+  --accent: #2a1c0e; /* deep amber tint */
+  --accent-foreground: #ff9a42; /* Cinematic Amber */
 
-  --destructive: oklch(0.66 0.2 22);
-  --destructive-foreground: oklch(0.98 0 0);
+  --destructive: #ef4444;
+  --destructive-foreground: #f5f7fa;
 
-  --success: oklch(0.68 0.14 150);
-  --success-foreground: oklch(0.16 0.02 150);
+  --success: #22c55e;
+  --success-foreground: #080a0d;
 
-  --warning: oklch(0.82 0.15 75);
-  --warning-foreground: oklch(0.24 0.06 75);
+  --warning: #fbbf24;
+  --warning-foreground: #11151b;
 
-  --border: oklch(1 0 0 / 9%);
-  --input: oklch(1 0 0 / 13%);
-  --ring: oklch(0.7 0.19 48);
+  --border: #303640; /* Titanium Border */
+  --input: #303640;
+  --ring: #ff7900;
 
-  --chart-1: oklch(0.7 0.19 48);
-  --chart-2: oklch(0.68 0.12 215);
-  --chart-3: oklch(0.72 0.15 160);
-  --chart-4: oklch(0.82 0.15 95);
-  --chart-5: oklch(0.68 0.2 2);
+  --chart-1: #ff7900; /* Electric Orange */
+  --chart-2: #4aa3ff;
+  --chart-3: #34d399;
+  --chart-4: #ff9a42; /* Cinematic Amber */
+  --chart-5: #f472b6;
 
-  --sidebar: oklch(0.17 0.006 60);
-  --sidebar-foreground: oklch(0.97 0.004 70);
-  --sidebar-primary: oklch(0.7 0.19 48);
-  --sidebar-primary-foreground: oklch(0.16 0.02 48);
-  --sidebar-accent: oklch(0.3 0.05 50);
-  --sidebar-accent-foreground: oklch(0.95 0.03 60);
-  --sidebar-border: oklch(1 0 0 / 9%);
-  --sidebar-ring: oklch(0.7 0.19 48);
+  --sidebar: #11151b; /* Carbon Charcoal */
+  --sidebar-foreground: #f5f7fa;
+  --sidebar-primary: #ff7900;
+  --sidebar-primary-foreground: #080a0d;
+  --sidebar-accent: #1b222b;
+  --sidebar-accent-foreground: #ff9a42;
+  --sidebar-border: #303640;
+  --sidebar-ring: #ff7900;
 }
 
 /* ---------------------------------------------------------------------------
@@ -236,7 +239,7 @@
   }
   /* Consistent, accessible focus rings across interactive elements. */
   :focus-visible {
-    @apply outline-ring outline-2 outline-offset-2;
+    @apply outline-2 outline-offset-2 outline-ring;
   }
 
   /* Honour the user's reduced-motion preference everywhere. */

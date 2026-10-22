@@ -8,7 +8,7 @@ import type { Metadata } from "next";
 
 export const metadata: Metadata = buildMetadata({
   title: "Contact",
-  description: "Get in touch with the Ramforge team.",
+  description: "Get in touch with the FrameForge team.",
 });
 
 export default function ContactPage() {

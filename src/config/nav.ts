@@ -43,7 +43,6 @@ export interface NavGroup {
 /** Storefront top navigation. */
 export const mainNav: NavItem[] = [
   { title: "Shop", href: "/shop", description: "Browse the full catalogue" },
-  { title: "Categories", href: "/categories", description: "Explore by topic" },
   { title: "Bundles", href: "/bundles", description: "Save with video packs" },
   { title: "Blog", href: "/blog", description: "News and tutorials" },
   { title: "About", href: "/about" },
@@ -157,22 +156,30 @@ export const adminNav: NavGroup[] = [
     label: "Insights",
     items: [
       { title: "Reports", href: "/admin/reports", icon: BarChart3, permission: "reports:read" },
-      { title: "Activity log", href: "/admin/activity", icon: Activity, permission: "activity:read" },
+      {
+        title: "Activity log",
+        href: "/admin/activity",
+        icon: Activity,
+        permission: "activity:read",
+      },
     ],
   },
   {
     label: "Administration",
     items: [
-      { title: "Users & roles", href: "/admin/users", icon: ShieldCheck, permission: "users:manage" },
+      {
+        title: "Users & roles",
+        href: "/admin/users",
+        icon: ShieldCheck,
+        permission: "users:manage",
+      },
       { title: "Settings", href: "/admin/settings", icon: Settings, permission: "settings:manage" },
     ],
   },
 ];
 
 /** Filter admin nav groups by the user's permissions, dropping empty groups. */
-export function filterAdminNav(
-  user: Pick<SessionUser, "role"> | null | undefined,
-): NavGroup[] {
+export function filterAdminNav(user: Pick<SessionUser, "role"> | null | undefined): NavGroup[] {
   return adminNav
     .map((group) => ({
       ...group,

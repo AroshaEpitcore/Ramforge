@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { ArrowRight, Check } from "lucide-react";
+import { ArrowRight, Check, Heart } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 
@@ -12,6 +12,8 @@ export interface PromoCardProps {
   features?: string[];
   ctaLabel?: string;
   ctaHref?: string;
+  donateLabel?: string;
+  donateHref?: string;
   className?: string;
 }
 
@@ -24,6 +26,8 @@ export function PromoCard({
   features = [],
   ctaLabel = "Browse",
   ctaHref = "#",
+  donateLabel,
+  donateHref,
   className,
 }: PromoCardProps) {
   return (
@@ -35,7 +39,7 @@ export function PromoCard({
     >
       <div>
         {eyebrow && (
-          <p className="text-xs font-semibold uppercase tracking-wider text-primary">{eyebrow}</p>
+          <p className="text-xs font-semibold tracking-wider text-primary uppercase">{eyebrow}</p>
         )}
         <h3 className="mt-1 text-xl font-bold tracking-tight">{title}</h3>
         {description && <p className="mt-1 text-sm text-muted-foreground">{description}</p>}
@@ -58,9 +62,16 @@ export function PromoCard({
         </ul>
       )}
 
-      <Button asChild className="mt-auto" rightIcon={<ArrowRight />}>
-        <Link href={ctaHref}>{ctaLabel}</Link>
-      </Button>
+      <div className="mt-auto flex flex-col gap-2">
+        <Button asChild rightIcon={<ArrowRight />}>
+          <Link href={ctaHref}>{ctaLabel}</Link>
+        </Button>
+        {donateHref && (
+          <Button asChild variant="outline" leftIcon={<Heart />}>
+            <Link href={donateHref}>{donateLabel ?? "Donate"}</Link>
+          </Button>
+        )}
+      </div>
     </div>
   );
 }

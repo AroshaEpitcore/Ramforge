@@ -6,7 +6,7 @@ import type { Metadata } from "next";
 
 export const metadata: Metadata = buildMetadata({
   title: "Blog",
-  description: "Tutorials, news and tips from the Ramforge team.",
+  description: "Tutorials, news and tips from the FrameForge team.",
 });
 
 export default function BlogPage() {

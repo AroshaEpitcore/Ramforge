@@ -41,7 +41,7 @@ export default function FaqPage() {
     <Container className="max-w-3xl py-10">
       <div className="mb-6 space-y-1">
         <h1 className="text-3xl font-semibold tracking-tight">Frequently asked questions</h1>
-        <p className="text-muted-foreground">Everything you need to know about Ramforge.</p>
+        <p className="text-muted-foreground">Everything you need to know about FrameForge.</p>
       </div>
       <Accordion type="single" collapsible className="rounded-xl border px-4">
         {faqs.map((item, i) => (

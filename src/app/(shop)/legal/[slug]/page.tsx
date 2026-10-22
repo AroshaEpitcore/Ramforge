@@ -12,7 +12,7 @@ const LEGAL: Record<string, { title: string; summary: string }> = {
     title: "Cookie Policy",
     summary: "The cookies we use and how to manage your preferences.",
   },
-  terms: { title: "Terms of Service", summary: "The terms governing your use of Ramforge." },
+  terms: { title: "Terms of Service", summary: "The terms governing your use of FrameForge." },
   "refund-policy": {
     title: "Refund Policy",
     summary: "Refund rules for digital products and the cancellation waiver.",

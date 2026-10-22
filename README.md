@@ -1,4 +1,4 @@
-# Ramforge
+# FrameForge
 
 A production-grade **foundation** for a digital video storefront + admin panel — customers buy
 and watch videos (stream / download / rent), with a full role-based admin. This repository is the
@@ -30,17 +30,17 @@ Visit:
 
 ## Scripts
 
-| Script | Description |
-| --- | --- |
-| `pnpm dev` | Start the dev server (Turbopack) |
-| `pnpm build` | Production build |
-| `pnpm start` | Serve the production build |
-| `pnpm lint` | ESLint (flat config) |
-| `pnpm typecheck` | `tsc --noEmit` |
-| `pnpm format` / `format:check` | Prettier write / check |
-| `pnpm test` / `test:watch` | Vitest (unit + component) |
-| `pnpm e2e` | Playwright smoke test |
-| `pnpm db:generate` / `db:format` | Prisma client / schema format |
+| Script                           | Description                      |
+| -------------------------------- | -------------------------------- |
+| `pnpm dev`                       | Start the dev server (Turbopack) |
+| `pnpm build`                     | Production build                 |
+| `pnpm start`                     | Serve the production build       |
+| `pnpm lint`                      | ESLint (flat config)             |
+| `pnpm typecheck`                 | `tsc --noEmit`                   |
+| `pnpm format` / `format:check`   | Prettier write / check           |
+| `pnpm test` / `test:watch`       | Vitest (unit + component)        |
+| `pnpm e2e`                       | Playwright smoke test            |
+| `pnpm db:generate` / `db:format` | Prisma client / schema format    |
 
 ## Tech stack
 
@@ -94,22 +94,26 @@ src/
 ## How to…
 
 ### …add a UI component
+
 Create `src/components/ui/<name>.tsx`. Use `cn()` for class merging and `cva` for variants; make it
 accessible (keyboard, ARIA, `focus-visible` rings) and dark-mode ready using the design tokens
 (`bg-primary`, `text-muted-foreground`, etc.). Add it to `/dev/ui` for visual verification.
 
 ### …add a page
+
 Place a `page.tsx` under the appropriate route group so it inherits that layout. Export `metadata`
 (or `generateMetadata`) via `buildMetadata()` from `lib/seo.ts`. Add a `loading.tsx` sibling for a
 skeleton. For URL state (filters, search) use `nuqs` via `hooks/use-shop-filters.ts`.
 
 ### …add a permission
+
 Add the `resource:action` string to `PERMISSIONS` in `lib/rbac.ts`, then grant it to the relevant
 roles in `ROLE_PERMISSIONS`. Gate UI with `<Can user={user} permission="…">` and enforce on the
 server with `requirePermission(user, "…")`. Admin nav items declare a `permission` in
 `config/nav.ts` and are filtered automatically.
 
 ### …add a server action
+
 Use `defineAction(schema, handler)` from `lib/action.ts` for zod validation and a typed
 `{ ok, data } | { ok: false, error }` result. Call `requirePermission()` inside the handler.
 
