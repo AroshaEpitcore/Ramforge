@@ -1,7 +1,7 @@
 import { BlogList } from "@/components/home/blog-list";
 import { CategorySidebar } from "@/components/home/category-sidebar";
+import { DonateCard } from "@/components/home/donate-card";
 import { HeroCarousel } from "@/components/home/hero-carousel";
-import { PromoCard } from "@/components/home/promo-card";
 import { SectionHeader } from "@/components/home/section-header";
 import { FadeIn, Stagger, StaggerItem } from "@/components/motion";
 import { BundleCard } from "@/components/shared/bundle-card";
@@ -37,18 +37,7 @@ export default function HomePage() {
           {/* Hero + promo */}
           <section className="grid gap-4 lg:grid-cols-[1fr_320px]">
             <HeroCarousel banners={banners} />
-            <PromoCard
-              eyebrow="Toolkit"
-              title="FrameForge Toolkit"
-              description="Powerful gizmos and scripts for faster compositing."
-              imageUrl="https://picsum.photos/seed/toolkit/640/360"
-              features={["Essential Gizmos", "Python Scripts", "Node Templates", "Workflow Tools"]}
-              ctaLabel="Browse tools"
-              ctaHref="/shop?category=compositing"
-              donateLabel="Donate"
-              donateHref="/donate"
-              className="hidden lg:flex"
-            />
+            <DonateCard href="/donate" className="hidden lg:flex" />
           </section>
 
           {/* Category chips (mobile + quick browse) */}
