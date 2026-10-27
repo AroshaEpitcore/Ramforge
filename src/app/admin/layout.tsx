@@ -1,16 +1,20 @@
 import { AdminSidebar } from "@/components/layout/admin-sidebar";
 import { AdminTopbar } from "@/components/layout/admin-topbar";
-import { getCurrentUserAs } from "@/server/current-user";
+import { isStaff } from "@/lib/rbac";
+import { getCurrentUser } from "@/server/current-user";
+import { redirect } from "next/navigation";
 import type { ReactNode } from "react";
 
 /**
  * Admin shell: collapsible role-filtered sidebar + topbar with breadcrumbs and
- * command palette. Previewed as SUPER_ADMIN so every nav item is visible; in
- * production the user comes from the session and `requirePermission` guards
- * each action. Middleware additionally restricts `/admin` to staff.
+ * command palette. The user comes from the session; the sidebar is filtered by
+ * role and `requirePermission` guards each action. Middleware also restricts
+ * `/admin` to staff — this is defence in depth.
  */
 export default async function AdminLayout({ children }: { children: ReactNode }) {
-  const user = await getCurrentUserAs("SUPER_ADMIN");
+  const user = await getCurrentUser();
+  if (!user) redirect("/login?callbackUrl=/admin");
+  if (!isStaff(user)) redirect("/");
 
   return (
     <div className="flex min-h-dvh bg-muted/30">

@@ -1,15 +1,17 @@
 import { siteConfig } from "@/config/site";
 import { mockBundles, mockCategories, mockVideos } from "@/mocks";
+import { listPublishedCourseSlugs } from "@/server/queries/courses";
 import type { MetadataRoute } from "next";
 
 const base = siteConfig.url.replace(/\/$/, "");
 
-export default function sitemap(): MetadataRoute.Sitemap {
+export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const now = new Date();
 
   const staticRoutes = [
     "",
     "/shop",
+    "/courses",
     "/categories",
     "/bundles",
     "/blog",
@@ -46,5 +48,20 @@ export default function sitemap(): MetadataRoute.Sitemap {
     priority: 0.6,
   }));
 
-  return [...staticRoutes, ...videoRoutes, ...categoryRoutes, ...bundleRoutes];
+  // Real published courses (DB). Tolerate an unavailable DB so the sitemap and
+  // build never fail on it.
+  let courseRoutes: MetadataRoute.Sitemap = [];
+  try {
+    const slugs = await listPublishedCourseSlugs();
+    courseRoutes = slugs.map((slug) => ({
+      url: `${base}/courses/${slug}`,
+      lastModified: now,
+      changeFrequency: "weekly" as const,
+      priority: 0.8,
+    }));
+  } catch {
+    courseRoutes = [];
+  }
+
+  return [...staticRoutes, ...videoRoutes, ...categoryRoutes, ...bundleRoutes, ...courseRoutes];
 }

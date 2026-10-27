@@ -7,6 +7,7 @@ import {
   Boxes,
   Clapperboard,
   FolderTree,
+  GraduationCap,
   Image,
   KeyRound,
   LayoutDashboard,
@@ -43,7 +44,7 @@ export interface NavGroup {
 /** Storefront top navigation. */
 export const mainNav: NavItem[] = [
   { title: "Shop", href: "/shop", description: "Browse the full catalogue" },
-  { title: "Bundles", href: "/bundles", description: "Save with video packs" },
+  { title: "Courses", href: "/courses", description: "Structured, lesson-by-lesson" },
   { title: "Blog", href: "/blog", description: "News and tutorials" },
   { title: "About", href: "/about" },
   { title: "Contact", href: "/contact" },
@@ -55,8 +56,8 @@ export const footerNav: NavGroup[] = [
     label: "Explore",
     items: [
       { title: "Shop", href: "/shop" },
+      { title: "Courses", href: "/courses" },
       { title: "Categories", href: "/categories" },
-      { title: "Bundles", href: "/bundles" },
       { title: "New releases", href: "/shop?sort=newest" },
     ],
   },
@@ -99,6 +100,7 @@ export const adminNav: NavGroup[] = [
     label: "Catalog",
     items: [
       { title: "Videos", href: "/admin/videos", icon: Clapperboard, permission: "videos:read" },
+      { title: "Courses", href: "/admin/courses", icon: GraduationCap, permission: "videos:read" },
       {
         title: "Categories",
         href: "/admin/categories",

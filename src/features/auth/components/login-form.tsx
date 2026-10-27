@@ -1,5 +1,6 @@
 "use client";
 
+import { loginSchema, type LoginInput } from "@/features/auth/schemas";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import {
@@ -13,27 +14,32 @@ import {
 import { Input } from "@/components/ui/input";
 import { PasswordInput } from "@/components/ui/password-input";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { signIn } from "next-auth/react";
 import Link from "next/link";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
-import { z } from "zod";
-
-const schema = z.object({
-  email: z.string().email("Enter a valid email"),
-  password: z.string().min(1, "Enter your password"),
-});
-type Values = z.infer<typeof schema>;
 
 export function LoginForm() {
-  const form = useForm<Values>({
-    resolver: zodResolver(schema),
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const callbackUrl = searchParams.get("callbackUrl") || "/account";
+
+  const form = useForm<LoginInput>({
+    resolver: zodResolver(loginSchema),
     defaultValues: { email: "", password: "" },
   });
 
-  const onSubmit = async () => {
-    await new Promise((r) => setTimeout(r, 600));
-    // Wire to `signIn("credentials", …)` from lib/auth once auth is implemented.
-    toast.info("Sign-in is not wired in the scaffold yet.");
+  const onSubmit = async (values: LoginInput) => {
+    const res = await signIn("credentials", { ...values, redirect: false });
+    if (!res || res.error) {
+      form.setError("password", { message: "Invalid email or password" });
+      toast.error("Sign-in failed", { description: "Check your email and password." });
+      return;
+    }
+    toast.success("Welcome back");
+    router.push(callbackUrl);
+    router.refresh();
   };
 
   return (
@@ -52,7 +58,12 @@ export function LoginForm() {
                 <FormItem>
                   <FormLabel>Email</FormLabel>
                   <FormControl>
-                    <Input type="email" placeholder="you@example.com" autoComplete="email" {...field} />
+                    <Input
+                      type="email"
+                      placeholder="you@example.com"
+                      autoComplete="email"
+                      {...field}
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -86,7 +97,10 @@ export function LoginForm() {
         </Form>
         <p className="mt-4 text-center text-sm text-muted-foreground">
           Don&apos;t have an account?{" "}
-          <Link href="/register" className="font-medium text-primary underline-offset-4 hover:underline">
+          <Link
+            href="/register"
+            className="font-medium text-primary underline-offset-4 hover:underline"
+          >
             Create one
           </Link>
         </p>

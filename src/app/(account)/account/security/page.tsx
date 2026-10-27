@@ -12,31 +12,28 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { PasswordInput } from "@/components/ui/password-input";
+import { changePassword } from "@/features/auth/actions";
+import { changePasswordSchema, type ChangePasswordInput } from "@/features/auth/schemas";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
-import { z } from "zod";
-
-const schema = z
-  .object({
-    current: z.string().min(1, "Enter your current password"),
-    next: z.string().min(8, "Use at least 8 characters"),
-    confirm: z.string(),
-  })
-  .refine((v) => v.next === v.confirm, {
-    message: "Passwords do not match",
-    path: ["confirm"],
-  });
-type Values = z.infer<typeof schema>;
 
 export default function SecurityPage() {
-  const form = useForm<Values>({
-    resolver: zodResolver(schema),
+  const form = useForm<ChangePasswordInput>({
+    resolver: zodResolver(changePasswordSchema),
     defaultValues: { current: "", next: "", confirm: "" },
   });
 
-  const onSubmit = async () => {
-    await new Promise((r) => setTimeout(r, 500));
+  const onSubmit = async (values: ChangePasswordInput) => {
+    const res = await changePassword(values);
+    if (!res.ok) {
+      for (const [field, messages] of Object.entries(res.fieldErrors ?? {})) {
+        if (messages?.[0])
+          form.setError(field as keyof ChangePasswordInput, { message: messages[0] });
+      }
+      toast.error("Could not change password", { description: res.error });
+      return;
+    }
     toast.success("Password changed");
     form.reset();
   };

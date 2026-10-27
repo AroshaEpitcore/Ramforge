@@ -5,11 +5,7 @@
  */
 
 export type Role =
-  | "SUPER_ADMIN"
-  | "STORE_MANAGER"
-  | "CONTENT_UPLOADER"
-  | "SUPPORT_STAFF"
-  | "CUSTOMER";
+  "SUPER_ADMIN" | "STORE_MANAGER" | "CONTENT_UPLOADER" | "SUPPORT_STAFF" | "CUSTOMER";
 
 /** Who is allowed to watch the full video. */
 export type AccessMode = "FREE" | "PAID" | "MEMBERS";
@@ -21,12 +17,7 @@ export type VideoQuality = "SD" | "HD" | "UHD_4K";
 
 export type VideoStatus = "DRAFT" | "PUBLISHED" | "ARCHIVED";
 
-export type OrderStatus =
-  | "PENDING"
-  | "PAID"
-  | "FAILED"
-  | "REFUNDED"
-  | "PARTIALLY_REFUNDED";
+export type OrderStatus = "PENDING" | "PAID" | "FAILED" | "REFUNDED" | "PARTIALLY_REFUNDED";
 
 export interface Category {
   id: string;
@@ -90,6 +81,44 @@ export interface Video {
   viewCount: number;
   publishedAt?: string;
   isNew?: boolean;
+}
+
+/** Where a video streams from. */
+export type VideoSource = "MUX" | "YOUTUBE";
+
+/** A single lesson within a course (a Video with a position). */
+export interface Lesson {
+  id: string;
+  title: string;
+  slug: string;
+  position: number;
+  durationSec: number;
+  accessMode: AccessMode;
+  /** True when this lesson is free to watch by anyone. */
+  free: boolean;
+  source: VideoSource;
+  youtubeId?: string | null;
+  notes?: string | null;
+}
+
+/** Course card/listing view model. */
+export interface CourseSummary {
+  id: string;
+  title: string;
+  slug: string;
+  description: string;
+  thumbnailUrl?: string | null;
+  category?: Pick<Category, "id" | "name" | "slug"> | null;
+  /** Prices in minor units. */
+  price: number;
+  salePrice?: number | null;
+  lessonCount: number;
+  freeLessonCount: number;
+}
+
+/** Course detail view model with ordered lessons. */
+export interface CourseDetail extends CourseSummary {
+  lessons: Lesson[];
 }
 
 export interface Bundle {
@@ -164,5 +193,4 @@ export interface SessionUser {
 
 /** Discriminated result type returned by server actions. */
 export type ActionResult<T = void> =
-  | { ok: true; data: T }
-  | { ok: false; error: string; fieldErrors?: Record<string, string[]> };
+  { ok: true; data: T } | { ok: false; error: string; fieldErrors?: Record<string, string[]> };

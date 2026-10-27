@@ -1,15 +1,32 @@
-import { PlaceholderPage } from "@/components/shared/placeholder";
+import { PageHeader } from "@/components/layout/page-header";
+import { VideoManager } from "@/features/admin/components/video-manager";
+import { requirePermission } from "@/lib/rbac";
 import { buildMetadata } from "@/lib/seo";
+import { listCategoryOptions, listCourseOptions, listVideosForAdmin } from "@/server/queries/admin";
+import { getCurrentUser } from "@/server/current-user";
 import type { Metadata } from "next";
+import { redirect } from "next/navigation";
 
 export const metadata: Metadata = buildMetadata({ title: "Videos" });
 
-export default function AdminVideosPage() {
+export default async function AdminVideosPage() {
+  const user = await getCurrentUser();
+  if (!user) redirect("/login?callbackUrl=/admin/videos");
+  requirePermission(user, "videos:read");
+
+  const [videos, categories, courses] = await Promise.all([
+    listVideosForAdmin(),
+    listCategoryOptions(),
+    listCourseOptions(),
+  ]);
+
   return (
-    <PlaceholderPage
-      title="Videos"
-      description="Create, edit, publish and price videos. Set access mode, downloads and rentals."
-      note="The video CRUD + data table is built on top of the DataTable and form primitives in this scaffold."
-    />
+    <div className="space-y-6">
+      <PageHeader
+        title="Videos"
+        description="Create and publish videos. Free videos embed from YouTube; paid lessons stream from Mux."
+      />
+      <VideoManager videos={videos} categories={categories} courses={courses} />
+    </div>
   );
 }

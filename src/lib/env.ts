@@ -26,6 +26,13 @@ export const env = createEnv({
       .string()
       .url()
       .default("postgresql://user:password@localhost:5432/ramforge?schema=public"),
+    // Direct (unpooled) connection used by `prisma migrate`. Prisma reads it
+    // from the schema `directUrl`; validated here for presence/shape. Falls back
+    // to a placeholder so builds pass without a DB configured.
+    DIRECT_URL: z
+      .string()
+      .url()
+      .default("postgresql://user:password@localhost:5432/ramforge?schema=public"),
 
     // Auth.js (NextAuth v5)
     AUTH_SECRET: z.string().min(1).default("dev-insecure-secret-change-me-in-production"),
@@ -39,9 +46,19 @@ export const env = createEnv({
     EMAIL_FROM: z.string().email().optional(),
     RESEND_API_KEY: z.string().optional(),
 
-    // Video hosting provider (not chosen yet — defaults to the in-repo mock).
+    // Video hosting provider. Paid lessons stream from Mux; free videos use
+    // YouTube embeds. Defaults to the in-repo mock until Mux keys are set.
     VIDEO_PROVIDER: z.enum(["mock", "mux", "cloudflare", "bunny"]).default("mock"),
     VIDEO_SIGNING_KEY: z.string().optional(),
+
+    // Mux (paid-lesson streaming). Optional so the app runs on the mock without
+    // them; getVideoProvider() throws a clear error if `mux` is selected while
+    // any required value is missing.
+    MUX_TOKEN_ID: z.string().optional(),
+    MUX_TOKEN_SECRET: z.string().optional(),
+    MUX_SIGNING_KEY_ID: z.string().optional(),
+    MUX_SIGNING_KEY: z.string().optional(),
+    MUX_WEBHOOK_SECRET: z.string().optional(),
   },
   client: {
     NEXT_PUBLIC_APP_URL: z.string().url().default("http://localhost:3000"),
@@ -53,6 +70,7 @@ export const env = createEnv({
   runtimeEnv: {
     NODE_ENV: process.env.NODE_ENV,
     DATABASE_URL: process.env.DATABASE_URL,
+    DIRECT_URL: process.env.DIRECT_URL,
     AUTH_SECRET: process.env.AUTH_SECRET,
     AUTH_URL: process.env.AUTH_URL,
     STRIPE_SECRET_KEY: process.env.STRIPE_SECRET_KEY,
@@ -61,6 +79,11 @@ export const env = createEnv({
     RESEND_API_KEY: process.env.RESEND_API_KEY,
     VIDEO_PROVIDER: process.env.VIDEO_PROVIDER,
     VIDEO_SIGNING_KEY: process.env.VIDEO_SIGNING_KEY,
+    MUX_TOKEN_ID: process.env.MUX_TOKEN_ID,
+    MUX_TOKEN_SECRET: process.env.MUX_TOKEN_SECRET,
+    MUX_SIGNING_KEY_ID: process.env.MUX_SIGNING_KEY_ID,
+    MUX_SIGNING_KEY: process.env.MUX_SIGNING_KEY,
+    MUX_WEBHOOK_SECRET: process.env.MUX_WEBHOOK_SECRET,
     NEXT_PUBLIC_APP_URL: process.env.NEXT_PUBLIC_APP_URL,
     NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY: process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY,
   },

@@ -11,6 +11,8 @@ export interface CreateUploadInput {
   filename: string;
   sizeBytes: number;
   contentType?: string;
+  /** Opaque value echoed back on provider webhooks (we pass the Video id). */
+  passthrough?: string;
 }
 
 export interface CreateUploadResult {

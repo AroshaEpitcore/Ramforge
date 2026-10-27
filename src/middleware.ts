@@ -1,18 +1,17 @@
-import { auth } from "@/lib/auth";
+import { authConfig } from "@/lib/auth.config";
+import NextAuth from "next-auth";
 import { NextResponse } from "next/server";
 
 /**
  * Route protection for `/admin` and `/account`.
  *
- * SCAFFOLD: enforcement is gated by `AUTH_ENFORCED` so every layout stays
- * viewable before real sign-in is wired. Flip it to `true` once `authorize`
- * in lib/auth.ts verifies real users — the enforcement logic below is final.
+ * Runs on the Edge runtime, so it builds its own NextAuth instance from the
+ * edge-safe `authConfig` (no Prisma/bcrypt). It only *reads* the JWT session;
+ * sign-in happens in the Node route handler (`lib/auth.ts`).
  */
-const AUTH_ENFORCED = false;
+const { auth } = NextAuth(authConfig);
 
 export default auth((req) => {
-  if (!AUTH_ENFORCED) return NextResponse.next();
-
   const { nextUrl } = req;
   const isLoggedIn = Boolean(req.auth?.user);
   const isAdminArea = nextUrl.pathname.startsWith("/admin");
@@ -24,7 +23,7 @@ export default auth((req) => {
     return NextResponse.redirect(loginUrl);
   }
 
-  // Admin area additionally requires a staff role.
+  // Admin area additionally requires a staff (non-customer) role.
   if (isAdminArea && req.auth?.user?.role === "CUSTOMER") {
     return NextResponse.redirect(new URL("/", nextUrl));
   }

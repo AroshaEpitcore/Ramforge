@@ -4,10 +4,12 @@ import { StorefrontFooter } from "@/components/layout/storefront-footer";
 import { StorefrontNavbar } from "@/components/layout/storefront-navbar";
 import { Container } from "@/components/layout/container";
 import { getCurrentUser } from "@/server/current-user";
+import { redirect } from "next/navigation";
 import type { ReactNode } from "react";
 
 export default async function AccountLayout({ children }: { children: ReactNode }) {
   const user = await getCurrentUser();
+  if (!user) redirect("/login?callbackUrl=/account");
 
   return (
     <div className="flex min-h-dvh flex-col">

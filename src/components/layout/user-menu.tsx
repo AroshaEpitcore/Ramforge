@@ -14,6 +14,7 @@ import { accountNav } from "@/config/nav";
 import { isStaff } from "@/lib/rbac";
 import type { SessionUser } from "@/types";
 import { LayoutDashboard, LogOut, User } from "lucide-react";
+import { signOut } from "next-auth/react";
 import Link from "next/link";
 
 function initials(name: string) {
@@ -77,7 +78,12 @@ export function UserMenu({ user }: { user: SessionUser | null }) {
           </>
         )}
         <DropdownMenuSeparator />
-        <DropdownMenuItem variant="destructive">
+        <DropdownMenuItem
+          variant="destructive"
+          onSelect={() => {
+            void signOut({ callbackUrl: "/" });
+          }}
+        >
           <LogOut />
           Sign out
         </DropdownMenuItem>

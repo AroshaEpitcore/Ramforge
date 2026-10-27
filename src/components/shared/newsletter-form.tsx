@@ -2,6 +2,7 @@
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { subscribeNewsletter } from "@/features/marketing/actions";
 import { cn } from "@/lib/utils";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
@@ -13,24 +14,39 @@ const schema = z.object({
 });
 type Values = z.infer<typeof schema>;
 
-/** Newsletter signup (UI only — wire `onSubmit` to a server action later). */
-export function NewsletterForm({ className }: { className?: string }) {
+/** Newsletter signup wired to the `subscribeNewsletter` server action. */
+export function NewsletterForm({
+  className,
+  source = "footer",
+}: {
+  className?: string;
+  source?: "footer" | "post-video" | "coming-soon";
+}) {
   const {
     register,
     handleSubmit,
     reset,
+    setError,
     formState: { errors, isSubmitting },
   } = useForm<Values>({ resolver: zodResolver(schema), defaultValues: { email: "" } });
 
   const onSubmit = async (values: Values) => {
-    // Simulated async subscribe.
-    await new Promise((r) => setTimeout(r, 600));
+    const res = await subscribeNewsletter({ email: values.email, source });
+    if (!res.ok) {
+      setError("email", { message: res.fieldErrors?.email?.[0] ?? res.error });
+      toast.error("Could not subscribe", { description: res.error });
+      return;
+    }
     toast.success("You're subscribed!", { description: `We'll send updates to ${values.email}.` });
     reset();
   };
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className={cn("flex flex-col gap-2", className)} noValidate>
+    <form
+      onSubmit={handleSubmit(onSubmit)}
+      className={cn("flex flex-col gap-2", className)}
+      noValidate
+    >
       <div className="flex gap-2">
         <Input
           type="email"

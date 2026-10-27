@@ -1,0 +1,63 @@
+import { z } from "zod";
+
+/**
+ * Admin content schemas (shared client/server). Kept free of
+ * transforms/defaults/coerce so the zod input and output types match and
+ * `react-hook-form` stays happy. Normalisation (empty-string → null, slug
+ * derivation, price → minor units) happens in the server action.
+ *
+ * Prices are entered in MAJOR units (e.g. dollars); number inputs register with
+ * `valueAsNumber`, so these are plain `z.number()`.
+ */
+const status = z.enum(["DRAFT", "PUBLISHED", "ARCHIVED"]);
+
+export const categorySchema = z.object({
+  id: z.string().optional(),
+  name: z.string().trim().min(2, "Enter a name").max(80),
+  slug: z.string().trim().max(80).optional(),
+  description: z.string().trim().max(500).optional(),
+  parentId: z.string().optional(),
+});
+export type CategoryInput = z.infer<typeof categorySchema>;
+
+export const courseSchema = z.object({
+  id: z.string().optional(),
+  title: z.string().trim().min(2, "Enter a title").max(120),
+  slug: z.string().trim().max(80).optional(),
+  description: z.string().trim().min(1, "Enter a description").max(2000),
+  categoryId: z.string().optional(),
+  priceMajor: z.number().min(0, "Price cannot be negative").max(100000),
+  status,
+  publishAt: z.string().optional(),
+});
+export type CourseInput = z.infer<typeof courseSchema>;
+
+export const videoSchema = z
+  .object({
+    id: z.string().optional(),
+    title: z.string().trim().min(2, "Enter a title").max(120),
+    slug: z.string().trim().max(80).optional(),
+    description: z.string().trim().min(1, "Enter a description").max(2000),
+    categoryId: z.string().min(1, "Choose a category"),
+    courseId: z.string().optional(),
+    position: z.number().int().min(0).max(999),
+    source: z.enum(["YOUTUBE", "MUX"]),
+    youtubeId: z.string().trim().max(32).optional(),
+    fullAssetId: z.string().trim().max(200).optional(),
+    accessMode: z.enum(["FREE", "PAID"]),
+    priceMajor: z.number().min(0).max(100000),
+    status,
+    publishAt: z.string().optional(),
+    notes: z.string().trim().max(5000).optional(),
+  })
+  .refine((v) => v.source !== "YOUTUBE" || !!(v.youtubeId && v.youtubeId.length), {
+    message: "A YouTube video id is required for YouTube videos",
+    path: ["youtubeId"],
+  });
+export type VideoInput = z.infer<typeof videoSchema>;
+
+export const reorderLessonsSchema = z.object({
+  courseId: z.string().min(1),
+  videoIds: z.array(z.string().min(1)).min(1),
+});
+export type ReorderLessonsInput = z.infer<typeof reorderLessonsSchema>;

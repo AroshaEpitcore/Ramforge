@@ -1,5 +1,7 @@
 "use client";
 
+import { registerUser } from "@/features/auth/actions";
+import { registerSchema, type RegisterInput } from "@/features/auth/schemas";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import {
@@ -13,27 +15,43 @@ import {
 import { Input } from "@/components/ui/input";
 import { PasswordInput } from "@/components/ui/password-input";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { signIn } from "next-auth/react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
-import { z } from "zod";
-
-const schema = z.object({
-  name: z.string().min(2, "Enter your name"),
-  email: z.string().email("Enter a valid email"),
-  password: z.string().min(8, "Use at least 8 characters"),
-});
-type Values = z.infer<typeof schema>;
 
 export function RegisterForm() {
-  const form = useForm<Values>({
-    resolver: zodResolver(schema),
+  const router = useRouter();
+  const form = useForm<RegisterInput>({
+    resolver: zodResolver(registerSchema),
     defaultValues: { name: "", email: "", password: "" },
   });
 
-  const onSubmit = async () => {
-    await new Promise((r) => setTimeout(r, 600));
-    toast.info("Registration is not wired in the scaffold yet.");
+  const onSubmit = async (values: RegisterInput) => {
+    const res = await registerUser(values);
+    if (!res.ok) {
+      for (const [field, messages] of Object.entries(res.fieldErrors ?? {})) {
+        if (messages?.[0]) form.setError(field as keyof RegisterInput, { message: messages[0] });
+      }
+      toast.error("Could not create account", { description: res.error });
+      return;
+    }
+
+    // Account created — sign straight in and land in the account area.
+    const signin = await signIn("credentials", {
+      email: values.email,
+      password: values.password,
+      redirect: false,
+    });
+    if (!signin || signin.error) {
+      toast.success("Account created", { description: "Please sign in to continue." });
+      router.push("/login");
+      return;
+    }
+    toast.success("Welcome to FrameForge");
+    router.push("/account");
+    router.refresh();
   };
 
   return (

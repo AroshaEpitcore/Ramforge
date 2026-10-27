@@ -1,7 +1,7 @@
 import "server-only";
 
 import { CONCURRENT_DEVICE_LIMIT } from "@/config/constants";
-import type { ActionResult, EntitlementType } from "@/types";
+import type { AccessMode, ActionResult, EntitlementType } from "@/types";
 
 /**
  * Entitlement service — decides what a user may do with a video and manages
@@ -61,6 +61,49 @@ export function canDownload(entitlement: Entitlement | null | undefined): Access
     return { allowed: false, reason: "DOWNLOAD_LIMIT_REACHED" };
   }
   return ALLOWED;
+}
+
+/**
+ * The single MVP access rule (ARCHITECTURE.md "MVP scope at a glance"):
+ *
+ *   canWatch = video is FREE
+ *           || user owns the video       (Purchase.videoId)
+ *           || user owns the video's course (Purchase.courseId)
+ *           (and the purchase is not revoked / expired)
+ *
+ * Pure function — the caller supplies the user's entitlements. FREE videos need
+ * no entitlement (and no sign-in).
+ */
+export interface VideoAccessInput {
+  accessMode: AccessMode;
+  videoId: string;
+  courseId?: string | null;
+}
+
+export interface OwnedEntitlement {
+  videoId?: string | null;
+  courseId?: string | null;
+  type: EntitlementType;
+  expiresAt?: Date | null;
+  revokedAt?: Date | null;
+}
+
+export function resolveVideoAccess(
+  video: VideoAccessInput,
+  entitlements: OwnedEntitlement[],
+): AccessDecision {
+  if (video.accessMode === "FREE") return ALLOWED;
+
+  const now = Date.now();
+  const owns = entitlements.some((e) => {
+    if (e.revokedAt) return false;
+    if (e.expiresAt && e.expiresAt.getTime() < now) return false;
+    if (e.videoId && e.videoId === video.videoId) return true;
+    if (e.courseId && video.courseId && e.courseId === video.courseId) return true;
+    return false;
+  });
+
+  return owns ? ALLOWED : { allowed: false, reason: "NO_ENTITLEMENT" };
 }
 
 export interface GrantAccessInput {

@@ -15,7 +15,7 @@ const csp = [
   `media-src 'self' blob: https:`,
   `font-src 'self' data:`,
   `connect-src 'self' https://api.stripe.com https:${isDev ? " ws:" : ""}`,
-  `frame-src 'self' https://js.stripe.com https://hooks.stripe.com`,
+  `frame-src 'self' https://js.stripe.com https://hooks.stripe.com https://www.youtube-nocookie.com https://www.youtube.com`,
   `frame-ancestors 'none'`,
   `base-uri 'self'`,
   `form-action 'self'`,
@@ -65,6 +65,7 @@ const nextConfig: NextConfig = {
       { protocol: "https", hostname: "*.b-cdn.net" },
       { protocol: "https", hostname: "*.r2.cloudflarestorage.com" },
       { protocol: "https", hostname: "customer-*.cloudflarestream.com" },
+      { protocol: "https", hostname: "i.ytimg.com" },
     ],
   },
   async headers() {

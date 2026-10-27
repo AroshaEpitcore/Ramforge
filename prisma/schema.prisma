@@ -1,5 +1,4 @@
 // FrameForge — Prisma schema (PostgreSQL).
-// Schema only for the scaffold; no migrations are required to build/run.
 // Money is always stored as integer MINOR UNITS (e.g. cents) — never floats.
 
 generator client {
@@ -9,7 +8,11 @@ generator client {
 
 datasource db {
   provider = "postgresql"
-  url      = env("DATABASE_URL")
+  // Runtime connection (use Neon's POOLED URL in production).
+  url = env("DATABASE_URL")
+  // Direct (unpooled) connection used by `prisma migrate`. For local dev set it
+  // equal to DATABASE_URL; on Neon use the direct (non-pooler) connection string.
+  directUrl = env("DIRECT_URL")
 }
 
 // ---------------------------------------------------------------------------
@@ -61,6 +64,21 @@ enum CouponType {
   FIXED
 }
 
+/// Where a video's bytes live. Free videos default to YouTube embeds (no hosting
+/// cost); paid lessons use Mux (signed playback). See ARCHITECTURE.md §7.
+enum VideoSource {
+  MUX
+  YOUTUBE
+}
+
+/// Transcoding/availability state reported by the hosting provider (Mux webhook).
+enum VideoUploadStatus {
+  PENDING
+  PROCESSING
+  READY
+  ERRORED
+}
+
 // ---------------------------------------------------------------------------
 // Auth (NextAuth v5 / Auth.js adapter models) + users
 // ---------------------------------------------------------------------------
@@ -79,12 +97,13 @@ model User {
   accounts         Account[]
   sessions         Session[]
   orders           Order[]
-  purchases        Purchase[]      @relation("UserPurchases")
-  grantedPurchases Purchase[]      @relation("GrantedBy")
+  purchases        Purchase[]     @relation("UserPurchases")
+  grantedPurchases Purchase[]     @relation("GrantedBy")
   favourites       Favourite[]
   reviews          Review[]
   watchSessions    WatchSession[]
   activityLogs     ActivityLog[]
+  uploadedVideos   Video[]        @relation("UploadedVideos")
 
   @@index([role])
 }
@@ -127,18 +146,47 @@ model VerificationToken {
 // ---------------------------------------------------------------------------
 
 model Category {
-  id          String  @id @default(cuid())
+  id          String     @id @default(cuid())
   name        String
-  slug        String  @unique
+  slug        String     @unique
   description String?
   icon        String?
   parentId    String?
   parent      Category?  @relation("CategoryTree", fields: [parentId], references: [id])
   children    Category[] @relation("CategoryTree")
   videos      Video[]
+  courses     Course[]
   createdAt   DateTime   @default(now())
 
   @@index([parentId])
+}
+
+/// A course is an ordered collection of video "lessons". Each lesson is a Video
+/// with a `position`; individual lessons can be FREE or PAID. Buying a course
+/// grants one Purchase row that unlocks every (incl. future) paid lesson.
+model Course {
+  id           String      @id @default(cuid())
+  title        String
+  slug         String      @unique
+  description  String
+  categoryId   String?
+  category     Category?   @relation(fields: [categoryId], references: [id])
+  thumbnailUrl String?
+  // Prices in minor units.
+  price       Int         @default(0)
+  salePrice   Int?
+  status      VideoStatus @default(DRAFT)
+  // Scheduled publishing: visible when status=PUBLISHED AND (publishAt is null OR publishAt <= now).
+  publishAt DateTime?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  lessons    Video[]
+  purchases  Purchase[]
+  orderItems OrderItem[]
+
+  @@index([categoryId])
+  @@index([status])
 }
 
 model Video {
@@ -149,23 +197,41 @@ model Video {
   tags           String[]
   categoryId     String
   category       Category     @relation(fields: [categoryId], references: [id])
+  // Lesson membership: a video may belong to at most one course, ordered by `position`.
+  courseId       String?
+  course         Course?      @relation(fields: [courseId], references: [id])
+  position       Int          @default(0)
   thumbnailUrl   String?
+  // Hosting: YOUTUBE free embeds vs MUX signed assets.
+  source         VideoSource  @default(MUX)
+  youtubeId      String?
   previewAssetId String?
   fullAssetId    String?
-  durationSec    Int          @default(0)
-  quality        VideoQuality @default(HD)
-  fileSizeBytes  BigInt?
+  // Serve the free preview as a window of the full asset (saves an extra Mux asset).
+  previewStartSec Int?
+  previewEndSec   Int?
+  uploadStatus    VideoUploadStatus @default(PENDING)
+  durationSec     Int               @default(0)
+  quality         VideoQuality      @default(HD)
+  fileSizeBytes   BigInt?
   // Prices in minor units.
-  price          Int          @default(0)
-  salePrice      Int?
-  accessMode     AccessMode   @default(PAID)
-  allowDownload  Boolean      @default(false)
-  rentalDays     Int?
-  status         VideoStatus  @default(DRAFT)
-  viewCount      Int          @default(0)
-  publishedAt    DateTime?
-  createdAt      DateTime     @default(now())
-  updatedAt      DateTime     @updatedAt
+  price         Int        @default(0)
+  salePrice     Int?
+  accessMode    AccessMode @default(PAID)
+  allowDownload Boolean    @default(false)
+  rentalDays    Int?
+  status        VideoStatus @default(DRAFT)
+  // Scheduled publishing (see Course.publishAt).
+  publishAt DateTime?
+  // Lesson notes (markdown) shown under the player; rendered sanitised.
+  notes     String?
+  viewCount Int       @default(0)
+  publishedAt DateTime?
+  // Attribution: which staff user uploaded this video.
+  uploadedById String?
+  uploadedBy   User?    @relation("UploadedVideos", fields: [uploadedById], references: [id])
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
 
   bundleLinks BundleVideo[]
   orderItems  OrderItem[]
@@ -174,7 +240,9 @@ model Video {
   reviews     Review[]
   watch       WatchSession[]
 
+  @@unique([courseId, position])
   @@index([categoryId])
+  @@index([courseId])
   @@index([status])
 }
 
@@ -244,6 +312,8 @@ model OrderItem {
   order    Order           @relation(fields: [orderId], references: [id], onDelete: Cascade)
   videoId  String?
   video    Video?          @relation(fields: [videoId], references: [id])
+  courseId String?
+  course   Course?         @relation(fields: [courseId], references: [id])
   bundleId String?
   bundle   Bundle?         @relation(fields: [bundleId], references: [id])
   type     EntitlementType @default(STREAM)
@@ -255,28 +325,35 @@ model OrderItem {
   @@index([orderId])
 }
 
-/// A granted entitlement — purchased or manually granted by staff.
+/// A granted entitlement — purchased or manually granted by staff. Grants access
+/// to EITHER a single video OR a whole course (exactly one of videoId/courseId;
+/// enforced by a DB check constraint in the migration).
 model Purchase {
-  id        String          @id @default(cuid())
-  userId    String
-  user      User            @relation("UserPurchases", fields: [userId], references: [id])
-  videoId   String
-  video     Video           @relation(fields: [videoId], references: [id])
-  orderId   String?
-  order     Order?          @relation(fields: [orderId], references: [id])
-  type      EntitlementType @default(STREAM)
-  expiresAt DateTime?
-  downloadCount Int         @default(0)
+  id       String  @id @default(cuid())
+  userId   String
+  user     User    @relation("UserPurchases", fields: [userId], references: [id])
+  videoId  String?
+  video    Video?  @relation(fields: [videoId], references: [id])
+  courseId String?
+  course   Course? @relation(fields: [courseId], references: [id])
+  orderId  String?
+  order    Order?  @relation(fields: [orderId], references: [id])
+
+  type          EntitlementType @default(STREAM)
+  expiresAt     DateTime?
+  downloadCount Int             @default(0)
   downloadLimit Int?
   revokedAt     DateTime?
   // Set when access was granted manually (not via a paid order).
   grantedById String?
-  grantedBy   User?     @relation("GrantedBy", fields: [grantedById], references: [id])
-  createdAt   DateTime  @default(now())
+  grantedBy   User?    @relation("GrantedBy", fields: [grantedById], references: [id])
+  createdAt   DateTime @default(now())
 
   @@unique([userId, videoId, type])
+  @@unique([userId, courseId, type])
   @@index([userId])
   @@index([videoId])
+  @@index([courseId])
 }
 
 /// Playback session, used to enforce concurrent-device limits.
@@ -327,18 +404,18 @@ model Review {
 // ---------------------------------------------------------------------------
 
 model Coupon {
-  id         String     @id @default(cuid())
-  code       String     @unique
-  type       CouponType @default(PERCENT)
+  id             String     @id @default(cuid())
+  code           String     @unique
+  type           CouponType @default(PERCENT)
   // PERCENT: 0–100; FIXED: minor units.
-  amount     Int
-  active     Boolean    @default(true)
+  amount         Int
+  active         Boolean    @default(true)
   maxRedemptions Int?
-  timesRedeemed  Int    @default(0)
-  startsAt   DateTime?
-  expiresAt  DateTime?
-  createdAt  DateTime   @default(now())
-  orders     Order[]
+  timesRedeemed  Int        @default(0)
+  startsAt       DateTime?
+  expiresAt      DateTime?
+  createdAt      DateTime   @default(now())
+  orders         Order[]
 }
 
 model Banner {
@@ -384,9 +461,11 @@ model Setting {
 }
 
 model NewsletterSubscriber {
-  id           String    @id @default(cuid())
-  email        String    @unique
-  confirmed    Boolean   @default(false)
+  id             String    @id @default(cuid())
+  email          String    @unique
+  confirmed      Boolean   @default(false)
+  // Where the sign-up came from: footer | post-video | coming-soon.
+  source         String?
   unsubscribedAt DateTime?
-  createdAt    DateTime  @default(now())
+  createdAt      DateTime  @default(now())
 }
