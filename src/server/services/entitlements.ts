@@ -1,6 +1,7 @@
 import "server-only";
 
 import { CONCURRENT_DEVICE_LIMIT } from "@/config/constants";
+import { db } from "@/server/db";
 import type { AccessMode, ActionResult, EntitlementType } from "@/types";
 
 /**
@@ -108,25 +109,89 @@ export function resolveVideoAccess(
 
 export interface GrantAccessInput {
   userId: string;
-  videoId: string;
-  type: EntitlementType;
+  /** Grant for exactly one of a single video OR a whole course. */
+  videoId?: string;
+  courseId?: string;
+  type?: EntitlementType;
+  orderId?: string;
   rentalDays?: number;
   downloadLimit?: number;
   /** Staff user id when granting manually. */
   grantedById?: string;
 }
 
-/** Grant access manually or as a result of a successful order (stub). */
-export async function grantAccess(_input: GrantAccessInput): Promise<ActionResult<{ id: string }>> {
-  // TODO: upsert a Purchase row in the DB; compute expiresAt from rentalDays.
-  return { ok: true, data: { id: "stub_entitlement" } };
+/**
+ * Grant an entitlement — from a paid order or a manual staff grant. Idempotent
+ * on (user, video|course, type): re-granting refreshes the order link / expiry
+ * and clears any previous revocation.
+ */
+export async function grantAccess(input: GrantAccessInput): Promise<ActionResult<{ id: string }>> {
+  const type = input.type ?? "STREAM";
+  if (!input.videoId && !input.courseId) {
+    return { ok: false, error: "A video or course is required." };
+  }
+  const expiresAt =
+    input.rentalDays && input.rentalDays > 0
+      ? new Date(Date.now() + input.rentalDays * 24 * 60 * 60 * 1000)
+      : null;
+
+  const base = {
+    userId: input.userId,
+    type,
+    orderId: input.orderId ?? null,
+    expiresAt,
+    downloadLimit: input.downloadLimit ?? null,
+    grantedById: input.grantedById ?? null,
+    revokedAt: null,
+  };
+
+  try {
+    const row = input.courseId
+      ? await db.purchase.upsert({
+          where: { userId_courseId_type: { userId: input.userId, courseId: input.courseId, type } },
+          update: { orderId: base.orderId, expiresAt, revokedAt: null },
+          create: { ...base, courseId: input.courseId },
+          select: { id: true },
+        })
+      : await db.purchase.upsert({
+          where: { userId_videoId_type: { userId: input.userId, videoId: input.videoId!, type } },
+          update: { orderId: base.orderId, expiresAt, revokedAt: null },
+          create: { ...base, videoId: input.videoId },
+          select: { id: true },
+        });
+    return { ok: true, data: { id: row.id } };
+  } catch (e) {
+    return { ok: false, error: e instanceof Error ? e.message : "Could not grant access." };
+  }
 }
 
-/** Revoke access, e.g. after a refund (stub). */
-export async function revokeAccess(
-  _entitlementId: string,
-  _reason: "REFUND" | "MANUAL" | "ABUSE" = "MANUAL",
-): Promise<ActionResult> {
-  // TODO: set revokedAt on the Purchase row and end active WatchSessions.
-  return { ok: true, data: undefined };
+/** Revoke a single entitlement and end its active watch sessions. */
+export async function revokeAccess(purchaseId: string): Promise<ActionResult> {
+  try {
+    const purchase = await db.purchase.findUnique({
+      where: { id: purchaseId },
+      select: { userId: true, videoId: true },
+    });
+    await db.purchase.update({ where: { id: purchaseId }, data: { revokedAt: new Date() } });
+    if (purchase?.videoId) {
+      await db.watchSession.updateMany({
+        where: { userId: purchase.userId, videoId: purchase.videoId, endedAt: null },
+        data: { endedAt: new Date() },
+      });
+    }
+    return { ok: true, data: undefined };
+  } catch (e) {
+    return { ok: false, error: e instanceof Error ? e.message : "Could not revoke access." };
+  }
+}
+
+/** Revoke every entitlement granted by an order (e.g. on refund). */
+export async function revokeOrderAccess(orderId: string): Promise<ActionResult> {
+  try {
+    const purchases = await db.purchase.findMany({ where: { orderId }, select: { id: true } });
+    for (const p of purchases) await revokeAccess(p.id);
+    return { ok: true, data: undefined };
+  } catch (e) {
+    return { ok: false, error: e instanceof Error ? e.message : "Could not revoke order access." };
+  }
 }

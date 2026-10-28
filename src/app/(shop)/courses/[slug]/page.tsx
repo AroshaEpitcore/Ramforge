@@ -4,7 +4,9 @@ import { Badge } from "@/components/ui/badge";
 import { siteConfig } from "@/config/site";
 import { CoursePlayer } from "@/features/courses/components/course-player";
 import { buildMetadata } from "@/lib/seo";
+import { ownsCourse } from "@/server/queries/account";
 import { getCourseBySlug } from "@/server/queries/courses";
+import { getCurrentUser } from "@/server/current-user";
 import { isPaymentsEnabled } from "@/server/services/settings";
 import type { CourseDetail } from "@/types";
 import type { Metadata } from "next";
@@ -23,8 +25,14 @@ export async function generateMetadata({
 
 export default async function CourseDetailPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
-  const [course, paymentsEnabled] = await Promise.all([getCourseBySlug(slug), isPaymentsEnabled()]);
+  const [course, paymentsEnabled, user] = await Promise.all([
+    getCourseBySlug(slug),
+    isPaymentsEnabled(),
+    getCurrentUser(),
+  ]);
   if (!course) notFound();
+
+  const owned = user ? await ownsCourse(user.id, course.id) : false;
 
   return (
     <Container className="py-8">
@@ -34,7 +42,7 @@ export default async function CourseDetailPage({ params }: { params: Promise<{ s
         <h1 className="text-3xl font-semibold tracking-tight">{course.title}</h1>
         <p className="max-w-3xl text-muted-foreground">{course.description}</p>
       </div>
-      <CoursePlayer course={course} paymentsEnabled={paymentsEnabled} />
+      <CoursePlayer course={course} paymentsEnabled={paymentsEnabled} owned={owned} />
     </Container>
   );
 }

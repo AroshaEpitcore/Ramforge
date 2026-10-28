@@ -460,6 +460,15 @@ model Setting {
   updatedAt DateTime @updatedAt
 }
 
+/// Idempotency guard for provider webhooks (Stripe/Mux). The event id is the PK,
+/// so re-delivered events are processed at most once.
+model ProcessedWebhookEvent {
+  id        String   @id
+  provider  String
+  type      String
+  createdAt DateTime @default(now())
+}
+
 model NewsletterSubscriber {
   id             String    @id @default(cuid())
   email          String    @unique

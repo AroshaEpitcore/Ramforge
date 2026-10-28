@@ -4,23 +4,23 @@ import { VideoGrid } from "@/components/shared/video-grid";
 import { VideoPlayer } from "@/components/shared/video-player";
 import { YouTubeEmbed } from "@/components/shared/youtube-embed";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
 import { Duration } from "@/components/ui/duration";
 import { Rating } from "@/components/ui/rating";
 import { Separator } from "@/components/ui/separator";
 import { QUALITY_LABELS } from "@/config/constants";
 import { siteConfig } from "@/config/site";
-import { formatCompactNumber, formatCurrency, formatDate, formatFileSize } from "@/lib/formatters";
+import { VideoAccessBox } from "@/features/commerce/components/video-access-box";
+import { formatCompactNumber, formatDate, formatFileSize } from "@/lib/formatters";
 import { buildMetadata } from "@/lib/seo";
+import { ownsVideo } from "@/server/queries/account";
 import {
   getPublishedVideoBySlug,
   getRelatedVideos,
   listApprovedReviews,
 } from "@/server/queries/videos";
+import { getCurrentUser } from "@/server/current-user";
 import { isPaymentsEnabled } from "@/server/services/settings";
 import type { Video } from "@/types";
-import { Check, Lock } from "lucide-react";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 
@@ -40,13 +40,15 @@ export default async function VideoDetailsPage({ params }: { params: Promise<{ s
   const video = await getPublishedVideoBySlug(slug);
   if (!video) notFound();
 
-  const [related, reviews, paymentsEnabled] = await Promise.all([
+  const [related, reviews, paymentsEnabled, user] = await Promise.all([
     getRelatedVideos(video),
     listApprovedReviews(video.id),
     isPaymentsEnabled(),
+    getCurrentUser(),
   ]);
 
   const isFree = video.accessMode === "FREE";
+  const owned = !isFree && user ? await ownsVideo(user.id, video.id) : false;
 
   return (
     <Container className="py-8">
@@ -122,7 +124,13 @@ export default async function VideoDetailsPage({ params }: { params: Promise<{ s
         </div>
 
         <div className="lg:min-w-0">
-          <AccessBox video={video} isFree={isFree} paymentsEnabled={paymentsEnabled} />
+          <VideoAccessBox
+            videoId={video.id}
+            price={video.salePrice ?? video.price}
+            isFree={isFree}
+            owned={owned}
+            paymentsEnabled={paymentsEnabled}
+          />
         </div>
       </div>
 
@@ -133,59 +141,6 @@ export default async function VideoDetailsPage({ params }: { params: Promise<{ s
         </section>
       )}
     </Container>
-  );
-}
-
-function AccessBox({
-  video,
-  isFree,
-  paymentsEnabled,
-}: {
-  video: Video;
-  isFree: boolean;
-  paymentsEnabled: boolean;
-}) {
-  const price = video.salePrice ?? video.price;
-  return (
-    <Card className="lg:sticky lg:top-20">
-      <CardContent className="space-y-4">
-        {isFree ? (
-          <>
-            <span className="text-3xl font-bold text-success">Free</span>
-            <ul className="space-y-1.5 text-sm text-muted-foreground">
-              <li className="flex items-center gap-2">
-                <Check className="size-4 text-success" /> Watch the full video above
-              </li>
-              <li className="flex items-center gap-2">
-                <Check className="size-4 text-success" /> No account required
-              </li>
-            </ul>
-          </>
-        ) : (
-          <>
-            <div className="flex items-center gap-2">
-              <Lock className="size-5 text-muted-foreground" />
-              <span className="text-lg font-semibold">Paid video</span>
-            </div>
-            {paymentsEnabled ? (
-              <>
-                <span className="text-3xl font-bold tabular-nums">{formatCurrency(price)}</span>
-                <Button fullWidth disabled>
-                  Buy (coming soon)
-                </Button>
-              </>
-            ) : (
-              <>
-                <Badge variant="muted">Coming soon</Badge>
-                <p className="text-sm text-muted-foreground">
-                  This video isn’t on sale yet. Join the newsletter to be notified.
-                </p>
-              </>
-            )}
-          </>
-        )}
-      </CardContent>
-    </Card>
   );
 }
 
