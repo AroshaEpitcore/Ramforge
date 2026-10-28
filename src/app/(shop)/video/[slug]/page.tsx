@@ -10,9 +10,13 @@ import { Separator } from "@/components/ui/separator";
 import { QUALITY_LABELS } from "@/config/constants";
 import { siteConfig } from "@/config/site";
 import { VideoAccessBox } from "@/features/commerce/components/video-access-box";
+import { FavouriteButton } from "@/features/favourites/components/favourite-button";
+import { ReviewForm } from "@/features/reviews/components/review-form";
 import { formatCompactNumber, formatDate, formatFileSize } from "@/lib/formatters";
 import { buildMetadata } from "@/lib/seo";
 import { ownsVideo } from "@/server/queries/account";
+import { isFavourited } from "@/server/queries/favourites";
+import { getUserReview } from "@/server/queries/reviews";
 import {
   getPublishedVideoBySlug,
   getRelatedVideos,
@@ -22,6 +26,7 @@ import { getCurrentUser } from "@/server/current-user";
 import { isPaymentsEnabled } from "@/server/services/settings";
 import type { Video } from "@/types";
 import type { Metadata } from "next";
+import Link from "next/link";
 import { notFound } from "next/navigation";
 
 export async function generateMetadata({
@@ -49,6 +54,8 @@ export default async function VideoDetailsPage({ params }: { params: Promise<{ s
 
   const isFree = video.accessMode === "FREE";
   const owned = !isFree && user ? await ownsVideo(user.id, video.id) : false;
+  const existingReview = user ? await getUserReview(user.id, video.id) : null;
+  const favourited = user ? await isFavourited(user.id, video.id) : false;
 
   return (
     <Container className="py-8">
@@ -120,16 +127,33 @@ export default async function VideoDetailsPage({ params }: { params: Promise<{ s
                 ))}
               </div>
             )}
+
+            {user ? (
+              <ReviewForm videoId={video.id} existing={existingReview} />
+            ) : (
+              <p className="text-sm text-muted-foreground">
+                <Link href="/login" className="text-primary underline-offset-4 hover:underline">
+                  Sign in
+                </Link>{" "}
+                to leave a review.
+              </p>
+            )}
           </section>
         </div>
 
-        <div className="lg:min-w-0">
+        <div className="space-y-3 lg:min-w-0">
           <VideoAccessBox
             videoId={video.id}
             price={video.salePrice ?? video.price}
             isFree={isFree}
             owned={owned}
             paymentsEnabled={paymentsEnabled}
+          />
+          <FavouriteButton
+            videoId={video.id}
+            initial={favourited}
+            signedIn={Boolean(user)}
+            withLabel
           />
         </div>
       </div>
