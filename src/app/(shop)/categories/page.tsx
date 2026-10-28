@@ -8,6 +8,9 @@ import { FolderTree } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 
+// Reads the live database, so render per-request (never prerender at build).
+export const dynamic = "force-dynamic";
+
 export const metadata: Metadata = buildMetadata({
   title: "Categories",
   description: "Explore videos by category and skill.",

@@ -7,6 +7,9 @@ import { isPaymentsEnabled } from "@/server/services/settings";
 import { GraduationCap } from "lucide-react";
 import type { Metadata } from "next";
 
+// Reads the live database, so render per-request (never prerender at build).
+export const dynamic = "force-dynamic";
+
 export const metadata: Metadata = buildMetadata({
   title: "Courses",
   description: "Structured video courses — watch the free lessons, unlock the rest.",

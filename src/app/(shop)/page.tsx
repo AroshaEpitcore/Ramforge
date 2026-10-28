@@ -15,6 +15,9 @@ import { mockBanners, mockBlogPosts, mockBundles } from "@/mocks";
 import type { Metadata } from "next";
 import { Clapperboard, Flame, Layers, Newspaper } from "lucide-react";
 
+// Reads the live database, so render per-request (never prerender at build).
+export const dynamic = "force-dynamic";
+
 export const metadata: Metadata = buildMetadata({
   title: { absolute: "FrameForge — Learn. Create. Composite." },
 });

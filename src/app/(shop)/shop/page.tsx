@@ -5,6 +5,9 @@ import { listStorefrontCategories } from "@/server/queries/categories";
 import { listPublishedVideos } from "@/server/queries/videos";
 import type { Metadata } from "next";
 
+// Reads the live database, so render per-request (never prerender at build).
+export const dynamic = "force-dynamic";
+
 export const metadata: Metadata = buildMetadata({
   title: "Shop",
   description: "Browse the full catalogue of VFX, compositing and filmmaking videos.",
