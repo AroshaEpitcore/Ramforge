@@ -34,14 +34,20 @@ export function VideoCard({ video, variant = "default", className, priority }: V
       )}
     >
       <Link href={`/video/${video.slug}`} className="relative block aspect-video overflow-hidden">
-        <Image
-          src={video.thumbnailUrl}
-          alt={video.title}
-          fill
-          priority={priority}
-          sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
-          className="object-cover transition-transform duration-500 ease-out group-hover:scale-105"
-        />
+        {video.thumbnailUrl ? (
+          <Image
+            src={video.thumbnailUrl}
+            alt={video.title}
+            fill
+            priority={priority}
+            sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+            className="object-cover transition-transform duration-500 ease-out group-hover:scale-105"
+          />
+        ) : (
+          <div className="flex size-full items-center justify-center bg-gradient-to-br from-primary/25 to-background">
+            <Play className="size-10 text-primary/60" />
+          </div>
+        )}
         {/* Hover play overlay */}
         <div className="absolute inset-0 flex items-center justify-center bg-black/30 opacity-0 transition-opacity duration-300 group-hover:opacity-100">
           <span className="flex size-12 items-center justify-center rounded-full bg-primary/90 text-primary-foreground shadow-lg">
@@ -50,19 +56,19 @@ export function VideoCard({ video, variant = "default", className, priority }: V
         </div>
 
         {/* Top-left badges */}
-        <div className="absolute left-2 top-2 flex gap-1">
+        <div className="absolute top-2 left-2 flex gap-1">
           {video.accessMode === "FREE" && <Badge variant="success">Free</Badge>}
           {onSale && <Badge variant="sale">Sale</Badge>}
           {video.isNew && <Badge variant="new">New</Badge>}
         </div>
         {/* Top-right quality */}
-        <div className="absolute right-2 top-2">
+        <div className="absolute top-2 right-2">
           <Badge variant={video.quality === "UHD_4K" ? "4k" : "hd"}>
             {QUALITY_LABELS[video.quality]}
           </Badge>
         </div>
         {/* Duration */}
-        <div className="absolute bottom-2 right-2">
+        <div className="absolute right-2 bottom-2">
           <span className="rounded bg-black/80 px-1.5 py-0.5 text-xs font-medium text-white tabular-nums">
             <Duration seconds={video.durationSec} />
           </span>
@@ -79,7 +85,7 @@ export function VideoCard({ video, variant = "default", className, priority }: V
           </Link>
         </div>
 
-        <h3 className={cn("font-semibold leading-snug", compact ? "text-sm" : "text-base")}>
+        <h3 className={cn("leading-snug font-semibold", compact ? "text-sm" : "text-base")}>
           <Link href={`/video/${video.slug}`} className="line-clamp-2 outline-none after:absolute">
             {video.title}
           </Link>
@@ -97,12 +103,7 @@ export function VideoCard({ video, variant = "default", className, priority }: V
 
         {!compact && (
           <div className="mt-auto pt-2">
-            <Price
-              price={video.price}
-              salePrice={video.salePrice}
-              size="md"
-              showDiscountBadge
-            />
+            <Price price={video.price} salePrice={video.salePrice} size="md" showDiscountBadge />
           </div>
         )}
       </div>

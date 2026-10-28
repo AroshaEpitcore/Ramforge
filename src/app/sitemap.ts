@@ -1,6 +1,7 @@
 import { siteConfig } from "@/config/site";
-import { mockBundles, mockCategories, mockVideos } from "@/mocks";
+import { mockBundles, mockCategories } from "@/mocks";
 import { listPublishedCourseSlugs } from "@/server/queries/courses";
+import { listPublishedVideoSlugs } from "@/server/queries/videos";
 import type { MetadataRoute } from "next";
 
 const base = siteConfig.url.replace(/\/$/, "");
@@ -29,12 +30,18 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     priority: path === "" ? 1 : 0.7,
   }));
 
-  const videoRoutes = mockVideos.map((v) => ({
-    url: `${base}/video/${v.slug}`,
-    lastModified: v.publishedAt ? new Date(v.publishedAt) : now,
-    changeFrequency: "weekly" as const,
-    priority: 0.8,
-  }));
+  let videoRoutes: MetadataRoute.Sitemap = [];
+  try {
+    const slugs = await listPublishedVideoSlugs();
+    videoRoutes = slugs.map((slug) => ({
+      url: `${base}/video/${slug}`,
+      lastModified: now,
+      changeFrequency: "weekly" as const,
+      priority: 0.8,
+    }));
+  } catch {
+    videoRoutes = [];
+  }
 
   const categoryRoutes = mockCategories.map((c) => ({
     url: `${base}/shop?category=${c.slug}`,

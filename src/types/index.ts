@@ -60,6 +60,9 @@ export interface Video {
   tags: string[];
   category: Pick<Category, "id" | "name" | "slug">;
   thumbnailUrl: string;
+  /** Streaming source + YouTube id (free videos embed from YouTube). */
+  source?: VideoSource;
+  youtubeId?: string | null;
   /** Free-to-watch preview/trailer asset id (provider-agnostic). */
   previewAssetId?: string;
   /** Full video asset id, buyers only. */

@@ -9,7 +9,8 @@ import { CategoryChip } from "@/components/shared/category-chip";
 import { VideoCard } from "@/components/shared/video-card";
 import { VideoGrid } from "@/components/shared/video-grid";
 import { buildMetadata } from "@/lib/seo";
-import { mockBanners, mockBlogPosts, mockBundles, mockCategories, mockVideos } from "@/mocks";
+import { listPublishedVideos } from "@/server/queries/videos";
+import { mockBanners, mockBlogPosts, mockBundles, mockCategories } from "@/mocks";
 import type { Metadata } from "next";
 import { Clapperboard, Flame, Layers, Newspaper } from "lucide-react";
 
@@ -17,11 +18,12 @@ export const metadata: Metadata = buildMetadata({
   title: { absolute: "FrameForge — Learn. Create. Composite." },
 });
 
-export default function HomePage() {
+export default async function HomePage() {
   const banners = mockBanners.filter((b) => b.active);
-  const featured = mockVideos[0];
-  const latest = mockVideos.slice(1, 5);
-  const newReleases = mockVideos.slice(0, 8);
+  const videos = await listPublishedVideos();
+  const featured = videos[0];
+  const latest = videos.slice(1, 5);
+  const newReleases = videos.slice(0, 8);
 
   return (
     <div className="mx-auto px-4 py-6 sm:px-6 lg:px-8">
@@ -55,7 +57,11 @@ export default function HomePage() {
                 icon={<Clapperboard />}
                 viewAllHref="/shop?sort=popular"
               />
-              <VideoCard video={featured} priority />
+              {featured ? (
+                <VideoCard video={featured} priority />
+              ) : (
+                <p className="text-sm text-muted-foreground">No videos published yet.</p>
+              )}
             </div>
 
             <div className="flex flex-col gap-3">

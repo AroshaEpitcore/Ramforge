@@ -7,11 +7,25 @@ import { UserMenu } from "@/components/layout/user-menu";
 import { Logo } from "@/components/shared/logo";
 import { ThemeToggle } from "@/components/shared/theme-toggle";
 import { Button } from "@/components/ui/button";
+import { listPublishedVideos } from "@/server/queries/videos";
 import type { SessionUser } from "@/types";
 import { Heart } from "lucide-react";
 import Link from "next/link";
 
-export function StorefrontNavbar({ user }: { user: SessionUser | null }) {
+export async function StorefrontNavbar({ user }: { user: SessionUser | null }) {
+  // Real search suggestions for the ⌘K palette (tolerate an unavailable DB).
+  let searchVideos: { label: string; href: string; keywords?: string[] }[] = [];
+  try {
+    const videos = await listPublishedVideos();
+    searchVideos = videos.slice(0, 8).map((v) => ({
+      label: v.title,
+      href: `/video/${v.slug}`,
+      keywords: v.tags,
+    }));
+  } catch {
+    searchVideos = [];
+  }
+
   return (
     <header className="sticky top-0 z-40 w-full border-b bg-background/80 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="mx-auto flex h-16 items-center gap-3 px-4 sm:px-6 lg:px-8">
@@ -41,7 +55,7 @@ export function StorefrontNavbar({ user }: { user: SessionUser | null }) {
           </div>
         </div>
       </div>
-      <CommandPalette />
+      <CommandPalette videos={searchVideos} />
     </header>
   );
 }
