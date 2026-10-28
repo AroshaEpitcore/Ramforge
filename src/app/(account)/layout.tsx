@@ -7,6 +7,9 @@ import { getCurrentUser } from "@/server/current-user";
 import { redirect } from "next/navigation";
 import type { ReactNode } from "react";
 
+// Account pages are per-user and DB-backed; always render per-request.
+export const dynamic = "force-dynamic";
+
 export default async function AccountLayout({ children }: { children: ReactNode }) {
   const user = await getCurrentUser();
   if (!user) redirect("/login?callbackUrl=/account");

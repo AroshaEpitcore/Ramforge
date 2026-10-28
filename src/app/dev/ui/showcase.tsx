@@ -118,13 +118,27 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
-import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
+import {
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from "@/components/ui/sheet";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Slider } from "@/components/ui/slider";
 import { Spinner } from "@/components/ui/spinner";
 import { StatCard } from "@/components/ui/stat-card";
 import { Switch } from "@/components/ui/switch";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { mockBundles, mockCartLines, mockCategories, mockLibrary, mockVideos } from "@/mocks";
@@ -135,7 +149,9 @@ import { toast } from "sonner";
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <section className="scroll-mt-20 space-y-4">
-      <h2 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">{title}</h2>
+      <h2 className="text-sm font-semibold tracking-wider text-muted-foreground uppercase">
+        {title}
+      </h2>
       <div className="rounded-xl border bg-card p-5">{children}</div>
     </section>
   );
@@ -154,7 +170,9 @@ export function UiShowcase() {
       <header className="sticky top-0 z-30 flex items-center justify-between border-b bg-background/80 px-6 py-4 backdrop-blur">
         <div>
           <h1 className="text-xl font-semibold tracking-tight">UI Showcase</h1>
-          <p className="text-sm text-muted-foreground">Every component and variant · light &amp; dark</p>
+          <p className="text-sm text-muted-foreground">
+            Every component and variant · light &amp; dark
+          </p>
         </div>
         <ThemeToggle />
       </header>
@@ -299,7 +317,9 @@ export function UiShowcase() {
                 <CardTitle>Card title</CardTitle>
                 <CardDescription>Card description text.</CardDescription>
               </CardHeader>
-              <CardContent className="text-sm text-muted-foreground">Card body content.</CardContent>
+              <CardContent className="text-sm text-muted-foreground">
+                Card body content.
+              </CardContent>
             </Card>
             <StatCard label="Revenue" value="$48.2k" delta={12.4} icon={<TrendingUp />} />
             <StatCard label="Refunds" value="2.1%" delta={-0.4} icon={<Sparkles />} />
@@ -520,7 +540,7 @@ export function UiShowcase() {
         </Section>
 
         <Section title="Data table">
-          <OrdersTable pageSize={5} />
+          <OrdersTable orders={[]} pageSize={5} />
         </Section>
 
         <Section title="Display">

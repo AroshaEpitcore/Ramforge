@@ -119,6 +119,9 @@ export async function listCategoryOptions(): Promise<{ id: string; name: string 
 export async function listCourseOptions(): Promise<{ id: string; title: string }[]> {
   return db.course.findMany({ orderBy: { title: "asc" }, select: { id: true, title: true } });
 }
+export async function listVideoOptions(): Promise<{ id: string; title: string }[]> {
+  return db.video.findMany({ orderBy: { title: "asc" }, select: { id: true, title: true } });
+}
 
 /** Ordered lessons of a course, for the reorder UI. */
 export async function getCourseLessons(

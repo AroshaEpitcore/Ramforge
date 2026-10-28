@@ -5,6 +5,9 @@ import { getCurrentUser } from "@/server/current-user";
 import { redirect } from "next/navigation";
 import type { ReactNode } from "react";
 
+// Admin pages are session- and DB-backed; always render per-request.
+export const dynamic = "force-dynamic";
+
 /**
  * Admin shell: collapsible role-filtered sidebar + topbar with breadcrumbs and
  * command palette. The user comes from the session; the sidebar is filtered by
