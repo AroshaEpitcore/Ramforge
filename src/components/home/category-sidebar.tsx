@@ -8,7 +8,6 @@ import {
 } from "@/components/ui/accordion";
 import { getCategoryIcon } from "@/lib/category-icons";
 import { cn } from "@/lib/utils";
-import { mockCategories } from "@/mocks";
 import type { Category } from "@/types";
 import Link from "next/link";
 
@@ -17,17 +16,21 @@ import Link from "next/link";
  * as a single-open accordion; categories without children are plain links.
  */
 export function CategorySidebar({
+  categories,
   activeSlug,
   className,
 }: {
+  categories: Category[];
   activeSlug?: string;
   className?: string;
 }) {
+  if (categories.length === 0) return null;
+
   // Open the category that matches the active slug, else the first one.
   const defaultOpen =
-    mockCategories.find(
+    categories.find(
       (c) => c.slug === activeSlug || c.children?.some((ch) => ch.slug === activeSlug),
-    )?.id ?? mockCategories[0]?.id;
+    )?.id ?? categories[0]?.id;
 
   return (
     <Accordion
@@ -36,7 +39,7 @@ export function CategorySidebar({
       defaultValue={defaultOpen}
       className={cn("w-full", className)}
     >
-      {mockCategories.map((category) => {
+      {categories.map((category) => {
         const Icon = getCategoryIcon(category.icon);
         const hasChildren = Boolean(category.children?.length);
         const active =
@@ -54,7 +57,7 @@ export function CategorySidebar({
             </span>
             <span
               className={cn(
-                "truncate text-sm font-semibold uppercase tracking-wide",
+                "truncate text-sm font-semibold tracking-wide uppercase",
                 active ? "text-primary" : "text-foreground",
               )}
             >

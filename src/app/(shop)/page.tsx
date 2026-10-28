@@ -9,8 +9,9 @@ import { CategoryChip } from "@/components/shared/category-chip";
 import { VideoCard } from "@/components/shared/video-card";
 import { VideoGrid } from "@/components/shared/video-grid";
 import { buildMetadata } from "@/lib/seo";
+import { listStorefrontCategories } from "@/server/queries/categories";
 import { listPublishedVideos } from "@/server/queries/videos";
-import { mockBanners, mockBlogPosts, mockBundles, mockCategories } from "@/mocks";
+import { mockBanners, mockBlogPosts, mockBundles } from "@/mocks";
 import type { Metadata } from "next";
 import { Clapperboard, Flame, Layers, Newspaper } from "lucide-react";
 
@@ -20,7 +21,10 @@ export const metadata: Metadata = buildMetadata({
 
 export default async function HomePage() {
   const banners = mockBanners.filter((b) => b.active);
-  const videos = await listPublishedVideos();
+  const [videos, categories] = await Promise.all([
+    listPublishedVideos(),
+    listStorefrontCategories(),
+  ]);
   const featured = videos[0];
   const latest = videos.slice(1, 5);
   const newReleases = videos.slice(0, 8);
@@ -31,7 +35,7 @@ export default async function HomePage() {
         {/* Category rail */}
         <aside className="hidden lg:block">
           <div className="sticky top-20">
-            <CategorySidebar />
+            <CategorySidebar categories={categories} />
           </div>
         </aside>
 
@@ -43,11 +47,13 @@ export default async function HomePage() {
           </section>
 
           {/* Category chips (mobile + quick browse) */}
-          <div className="-mb-4 flex gap-2 overflow-x-auto pb-1 lg:hidden">
-            {mockCategories.map((c) => (
-              <CategoryChip key={c.id} category={c} showCount />
-            ))}
-          </div>
+          {categories.length > 0 && (
+            <div className="-mb-4 flex gap-2 overflow-x-auto pb-1 lg:hidden">
+              {categories.map((c) => (
+                <CategoryChip key={c.id} category={c} showCount />
+              ))}
+            </div>
+          )}
 
           {/* Featured / Latest / Blog */}
           <section className="grid gap-6 lg:grid-cols-3">
