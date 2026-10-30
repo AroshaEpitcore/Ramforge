@@ -8,7 +8,7 @@ import { Label } from "@/components/ui/label";
 import { buyVideo } from "@/features/commerce/actions";
 import { CouponField } from "@/features/commerce/components/coupon-field";
 import { formatCurrency } from "@/lib/formatters";
-import { Check, Lock } from "lucide-react";
+import { Check, Download, Lock } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 
@@ -20,6 +20,7 @@ export function VideoAccessBox({
   paymentsEnabled,
   rentalDays,
   rentalPrice,
+  allowDownload,
 }: {
   videoId: string;
   price: number;
@@ -28,13 +29,30 @@ export function VideoAccessBox({
   paymentsEnabled: boolean;
   rentalDays?: number | null;
   rentalPrice?: number | null;
+  allowDownload?: boolean;
 }) {
   const [consent, setConsent] = useState(false);
   const [buying, setBuying] = useState(false);
   const [couponCode, setCouponCode] = useState<string | null>(null);
   const [finalPrice, setFinalPrice] = useState<number | null>(null);
+  const [downloading, setDownloading] = useState(false);
 
   const rentable = Boolean(rentalDays && rentalPrice);
+
+  const onDownload = async () => {
+    setDownloading(true);
+    try {
+      const res = await fetch(`/api/videos/${videoId}/download`);
+      const body = await res.json().catch(() => ({}));
+      if (!res.ok || !body.url) {
+        toast.error("Download unavailable", { description: body.error });
+        return;
+      }
+      window.location.href = body.url;
+    } finally {
+      setDownloading(false);
+    }
+  };
 
   const onBuy = async (rental = false) => {
     setBuying(true);
@@ -73,6 +91,17 @@ export function VideoAccessBox({
             <p className="text-sm text-muted-foreground">
               Find it any time in your <span className="font-medium">library</span>.
             </p>
+            {allowDownload && (
+              <Button
+                fullWidth
+                variant="outline"
+                loading={downloading}
+                leftIcon={<Download />}
+                onClick={onDownload}
+              >
+                Download
+              </Button>
+            )}
           </>
         ) : (
           <>

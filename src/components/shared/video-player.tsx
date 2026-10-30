@@ -5,7 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { Maximize, Pause, Play, Settings, Volume2, VolumeX } from "lucide-react";
 import Image from "next/image";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 export interface PlaybackSource {
   /** Direct media URL (provider resolves a signed, expiring URL at runtime). */
@@ -54,6 +54,38 @@ export function VideoPlayer({ source, title, className, isPreview }: VideoPlayer
     setMuted((m) => !m);
   };
 
+  // Attach the source. HLS (.m3u8) plays natively on Safari; elsewhere we use
+  // hls.js (loaded only when needed). Non-HLS URLs play directly.
+  useEffect(() => {
+    const el = videoRef.current;
+    if (!el || !source.src) return;
+    const src = source.src;
+    const isHls = src.includes(".m3u8");
+
+    if (!isHls || el.canPlayType("application/vnd.apple.mpegurl")) {
+      el.src = src;
+      return;
+    }
+
+    let destroy: (() => void) | undefined;
+    let cancelled = false;
+    void import("hls.js").then(({ default: Hls }) => {
+      if (cancelled || !videoRef.current) return;
+      if (Hls.isSupported()) {
+        const hls = new Hls();
+        hls.loadSource(src);
+        hls.attachMedia(videoRef.current);
+        destroy = () => hls.destroy();
+      } else {
+        videoRef.current.src = src;
+      }
+    });
+    return () => {
+      cancelled = true;
+      destroy?.();
+    };
+  }, [source.src]);
+
   return (
     <div
       className={cn(
@@ -64,7 +96,6 @@ export function VideoPlayer({ source, title, className, isPreview }: VideoPlayer
       {source.src ? (
         <video
           ref={videoRef}
-          src={source.src}
           poster={source.poster}
           className="size-full object-contain"
           onPlay={() => setPlaying(true)}
@@ -74,7 +105,13 @@ export function VideoPlayer({ source, title, className, isPreview }: VideoPlayer
       ) : (
         <>
           {source.poster && (
-            <Image src={source.poster} alt={title ?? "Video"} fill className="object-cover opacity-80" sizes="100vw" />
+            <Image
+              src={source.poster}
+              alt={title ?? "Video"}
+              fill
+              className="object-cover opacity-80"
+              sizes="100vw"
+            />
           )}
           <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-black/20" />
         </>

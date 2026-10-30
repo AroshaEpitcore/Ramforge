@@ -1,3 +1,4 @@
+import { CONCURRENT_DEVICE_LIMIT } from "@/config/constants";
 import { getVideoProvider } from "@/lib/video";
 import { getCurrentUser } from "@/server/current-user";
 import { db } from "@/server/db";
@@ -48,6 +49,19 @@ export async function GET(_req: Request, { params }: { params: Promise<{ id: str
     if (!decision.allowed) {
       return NextResponse.json({ error: decision.reason ?? "Forbidden" }, { status: 403 });
     }
+
+    // Anti-sharing: cap concurrent playback sessions per account. A session is
+    // "active" if it heartbeated recently; stale ones free up a slot.
+    const since = new Date(Date.now() - 2 * 60 * 1000);
+    const active = await db.watchSession.count({
+      where: { userId: user.id, videoId: video.id, endedAt: null, lastHeartbeat: { gt: since } },
+    });
+    if (active >= CONCURRENT_DEVICE_LIMIT) {
+      return NextResponse.json({ error: "DEVICE_LIMIT_REACHED" }, { status: 429 });
+    }
+    await db.watchSession.create({
+      data: { userId: user.id, videoId: video.id, lastHeartbeat: new Date() },
+    });
   }
 
   if (video.source === "YOUTUBE") {

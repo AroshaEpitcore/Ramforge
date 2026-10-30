@@ -150,6 +150,7 @@ export default async function VideoDetailsPage({ params }: { params: Promise<{ s
             paymentsEnabled={paymentsEnabled}
             rentalDays={video.rentalDays}
             rentalPrice={video.rentalPrice}
+            allowDownload={video.allowDownload}
           />
           <FavouriteButton
             videoId={video.id}
