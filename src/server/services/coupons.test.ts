@@ -1,9 +1,9 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-const { db } = vi.hoisted(() => ({ db: { coupon: { findUnique: vi.fn() } } }));
+const { db } = vi.hoisted(() => ({ db: { coupon: { findUnique: vi.fn(), update: vi.fn() } } }));
 vi.mock("@/server/db", () => ({ db }));
 
-import { validateCoupon } from "./coupons";
+import { normaliseCode, redeemCoupon, validateCoupon } from "./coupons";
 
 const coupon = (over: Record<string, unknown> = {}) => ({
   id: "cp1",
@@ -60,5 +60,23 @@ describe("validateCoupon", () => {
       expect(r.discount).toBe(1000);
       expect(r.finalPrice).toBe(0);
     }
+  });
+
+  it("normalises codes to uppercase and looks up case-insensitively", async () => {
+    db.coupon.findUnique.mockResolvedValue(coupon());
+    await validateCoupon("  save  ", 5000);
+    expect(normaliseCode("  save  ")).toBe("SAVE");
+    expect(db.coupon.findUnique).toHaveBeenCalledWith({ where: { code: "SAVE" } });
+  });
+});
+
+describe("redeemCoupon", () => {
+  it("increments the redemption count", async () => {
+    db.coupon.update.mockResolvedValue({});
+    await redeemCoupon("cp1");
+    expect(db.coupon.update).toHaveBeenCalledWith({
+      where: { id: "cp1" },
+      data: { timesRedeemed: { increment: 1 } },
+    });
   });
 });

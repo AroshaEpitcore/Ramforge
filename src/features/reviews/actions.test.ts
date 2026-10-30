@@ -3,7 +3,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 const { db, requireCurrentUser } = vi.hoisted(() => ({
   db: {
     video: { findUnique: vi.fn() },
-    review: { upsert: vi.fn(), update: vi.fn() },
+    review: { upsert: vi.fn(), update: vi.fn(), delete: vi.fn() },
   },
   requireCurrentUser: vi.fn(),
 }));
@@ -11,7 +11,7 @@ vi.mock("@/server/db", () => ({ db }));
 vi.mock("@/server/current-user", () => ({ requireCurrentUser }));
 vi.mock("next/cache", () => ({ revalidatePath: vi.fn() }));
 
-import { approveReview, submitReview } from "./actions";
+import { approveReview, deleteReview, submitReview } from "./actions";
 
 const customer = { id: "u1", role: "CUSTOMER", name: "U", email: "u@x.com" };
 const admin = { id: "a1", role: "SUPER_ADMIN", name: "A", email: "a@x.com" };
@@ -64,5 +64,22 @@ describe("approveReview", () => {
     expect(db.review.update).toHaveBeenCalledWith(
       expect.objectContaining({ where: { id: "r1" }, data: { approved: true } }),
     );
+  });
+});
+
+describe("deleteReview", () => {
+  it("forbids a non-moderator", async () => {
+    requireCurrentUser.mockResolvedValue(customer);
+    const res = await deleteReview("r1");
+    expect(res.ok).toBe(false);
+    expect(db.review.delete).not.toHaveBeenCalled();
+  });
+
+  it("deletes for a moderator", async () => {
+    requireCurrentUser.mockResolvedValue(admin);
+    db.review.delete.mockResolvedValue({ video: { slug: "v" } });
+    const res = await deleteReview("r1");
+    expect(res.ok).toBe(true);
+    expect(db.review.delete).toHaveBeenCalledWith(expect.objectContaining({ where: { id: "r1" } }));
   });
 });
