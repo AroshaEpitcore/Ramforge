@@ -5,7 +5,7 @@ import { env } from "@/lib/env";
 import { createCheckoutSession } from "@/lib/stripe/server";
 import { db } from "@/server/db";
 import { requireCurrentUser } from "@/server/current-user";
-import { grantAccess } from "@/server/services/entitlements";
+import { grantOrderAccess } from "@/server/services/entitlements";
 import { redeemCoupon, validateCoupon } from "@/server/services/coupons";
 import { isPaymentsEnabled } from "@/server/services/settings";
 import type { ActionResult } from "@/types";
@@ -18,7 +18,7 @@ const buySchema = z.object({
 });
 
 const previewSchema = z.object({
-  kind: z.enum(["course", "video"]),
+  kind: z.enum(["course", "video", "bundle"]),
   id: z.string().min(1),
   code: z.string().trim().min(1),
 });
@@ -30,7 +30,7 @@ function fail(error: string, fieldErrors?: Record<string, string[]>): ActionResu
 const base = () => env.NEXT_PUBLIC_APP_URL.replace(/\/$/, "");
 
 async function startCheckout(opts: {
-  kind: "course" | "video";
+  kind: "course" | "video" | "bundle";
   id: string;
   title: string;
   subtotal: number;
@@ -56,7 +56,11 @@ async function startCheckout(opts: {
           type: "STREAM",
           unitPrice: opts.subtotal,
           quantity: 1,
-          ...(opts.kind === "course" ? { courseId: opts.id } : { videoId: opts.id }),
+          ...(opts.kind === "course"
+            ? { courseId: opts.id }
+            : opts.kind === "bundle"
+              ? { bundleId: opts.id }
+              : { videoId: opts.id }),
         },
       },
     },
@@ -66,11 +70,7 @@ async function startCheckout(opts: {
   // Free after discount → grant immediately, no Stripe (which rejects $0).
   if (opts.finalPrice <= 0) {
     await db.order.update({ where: { id: order.id }, data: { status: "PAID" } });
-    await grantAccess({
-      userId: opts.userId,
-      orderId: order.id,
-      ...(opts.kind === "course" ? { courseId: opts.id } : { videoId: opts.id }),
-    });
+    await grantOrderAccess(order.id);
     if (opts.couponId) await redeemCoupon(opts.couponId);
     return { ok: true, data: { url: `${base()}/order-confirmation?order=${order.id}` } };
   }
@@ -95,14 +95,14 @@ export async function previewCoupon(
   if (!parsed.success) return fail("Enter a coupon code.");
   const { kind, id, code } = parsed.data;
   try {
-    const price =
+    const sel = { where: { id }, select: { price: true, salePrice: true } };
+    const row =
       kind === "course"
-        ? await db.course
-            .findUnique({ where: { id }, select: { price: true, salePrice: true } })
-            .then((c) => (c ? (c.salePrice ?? c.price) : null))
-        : await db.video
-            .findUnique({ where: { id }, select: { price: true, salePrice: true } })
-            .then((v) => (v ? (v.salePrice ?? v.price) : null));
+        ? await db.course.findUnique(sel)
+        : kind === "bundle"
+          ? await db.bundle.findUnique(sel)
+          : await db.video.findUnique(sel);
+    const price = row ? (row.salePrice ?? row.price) : null;
     if (price == null) return fail("Item not found.");
 
     const res = await validateCoupon(code, price);
@@ -226,6 +226,59 @@ export async function buyVideo(raw: unknown): Promise<ActionResult<{ url: string
       userId: user.id,
       userEmail: user.email,
       cancelPath: `/video/${video.slug}`,
+    });
+  } catch (e) {
+    if (e instanceof Error && e.message === "UNAUTHENTICATED")
+      return fail("Please sign in to buy.");
+    return fail("Could not start checkout. Please try again.");
+  }
+}
+
+/** Begin purchase of a bundle → grants access to every included video. */
+export async function buyBundle(raw: unknown): Promise<ActionResult<{ url: string }>> {
+  const parsed = buySchema.safeParse(raw);
+  if (!parsed.success) {
+    return fail(
+      "Please accept the terms to continue.",
+      z.flattenError(parsed.error).fieldErrors as Record<string, string[]>,
+    );
+  }
+  try {
+    if (!(await isPaymentsEnabled())) return fail("Payments are not enabled yet.");
+
+    const bundle = await db.bundle.findUnique({
+      where: { id: parsed.data.id },
+      select: {
+        id: true,
+        title: true,
+        slug: true,
+        price: true,
+        salePrice: true,
+        status: true,
+        _count: { select: { videos: true } },
+      },
+    });
+    if (!bundle || bundle.status !== "PUBLISHED" || bundle._count.videos === 0) {
+      return fail("Bundle not found.");
+    }
+
+    const price = bundle.salePrice ?? bundle.price;
+    if (price <= 0) return fail("This bundle is free.");
+
+    const user = await requireCurrentUser();
+    const coupon = await resolveCoupon(parsed.data.couponCode, price);
+    if (!coupon.ok) return fail(coupon.error, { couponCode: [coupon.error] });
+
+    return await startCheckout({
+      kind: "bundle",
+      id: bundle.id,
+      title: bundle.title,
+      subtotal: price,
+      finalPrice: coupon.finalPrice,
+      couponId: coupon.couponId,
+      userId: user.id,
+      userEmail: user.email,
+      cancelPath: `/bundles/${bundle.slug}`,
     });
   } catch (e) {
     if (e instanceof Error && e.message === "UNAUTHENTICATED")

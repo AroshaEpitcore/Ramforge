@@ -1,5 +1,6 @@
 import { siteConfig } from "@/config/site";
-import { mockBundles, mockCategories } from "@/mocks";
+import { mockCategories } from "@/mocks";
+import { listPublishedBundleSlugs } from "@/server/queries/bundles";
 import { listPublishedCourseSlugs } from "@/server/queries/courses";
 import { listPublishedVideoSlugs } from "@/server/queries/videos";
 import type { MetadataRoute } from "next";
@@ -49,11 +50,17 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     priority: 0.5,
   }));
 
-  const bundleRoutes = mockBundles.map((b) => ({
-    url: `${base}/bundles/${b.slug}`,
-    changeFrequency: "weekly" as const,
-    priority: 0.6,
-  }));
+  let bundleRoutes: MetadataRoute.Sitemap = [];
+  try {
+    const slugs = await listPublishedBundleSlugs();
+    bundleRoutes = slugs.map((slug) => ({
+      url: `${base}/bundles/${slug}`,
+      changeFrequency: "weekly" as const,
+      priority: 0.6,
+    }));
+  } catch {
+    bundleRoutes = [];
+  }
 
   // Real published courses (DB). Tolerate an unavailable DB so the sitemap and
   // build never fail on it.

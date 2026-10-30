@@ -17,7 +17,7 @@ export function CouponField({
   itemId,
   onApplied,
 }: {
-  kind: "course" | "video";
+  kind: "course" | "video" | "bundle";
   itemId: string;
   onApplied: (code: string | null, finalPrice: number | null) => void;
 }) {

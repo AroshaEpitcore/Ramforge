@@ -45,6 +45,7 @@ export interface NavGroup {
 export const mainNav: NavItem[] = [
   { title: "Shop", href: "/shop", description: "Browse the full catalogue" },
   { title: "Courses", href: "/courses", description: "Structured, lesson-by-lesson" },
+  { title: "Bundles", href: "/bundles", description: "Save with video packs" },
   { title: "Blog", href: "/blog", description: "News and tutorials" },
   { title: "About", href: "/about" },
   { title: "Contact", href: "/contact" },
@@ -57,8 +58,8 @@ export const footerNav: NavGroup[] = [
     items: [
       { title: "Shop", href: "/shop" },
       { title: "Courses", href: "/courses" },
+      { title: "Bundles", href: "/bundles" },
       { title: "Categories", href: "/categories" },
-      { title: "New releases", href: "/shop?sort=newest" },
     ],
   },
   {

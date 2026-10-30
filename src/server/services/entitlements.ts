@@ -165,6 +165,44 @@ export async function grantAccess(input: GrantAccessInput): Promise<ActionResult
   }
 }
 
+/**
+ * Grant every entitlement for a paid order — expanding bundles into their member
+ * videos. Idempotent (grantAccess upserts), so safe to call on webhook retries.
+ */
+export async function grantOrderAccess(orderId: string): Promise<ActionResult> {
+  const order = await db.order.findUnique({
+    where: { id: orderId },
+    select: {
+      userId: true,
+      items: {
+        select: { courseId: true, videoId: true, bundleId: true, type: true, rentalDays: true },
+      },
+    },
+  });
+  if (!order) return { ok: false, error: "Order not found." };
+
+  for (const item of order.items) {
+    const common = {
+      userId: order.userId,
+      orderId,
+      type: item.type,
+      rentalDays: item.rentalDays ?? undefined,
+    };
+    if (item.courseId) {
+      await grantAccess({ ...common, courseId: item.courseId });
+    } else if (item.videoId) {
+      await grantAccess({ ...common, videoId: item.videoId });
+    } else if (item.bundleId) {
+      const members = await db.bundleVideo.findMany({
+        where: { bundleId: item.bundleId },
+        select: { videoId: true },
+      });
+      for (const m of members) await grantAccess({ ...common, videoId: m.videoId, type: "STREAM" });
+    }
+  }
+  return { ok: true, data: undefined };
+}
+
 /** Revoke a single entitlement and end its active watch sessions. */
 export async function revokeAccess(purchaseId: string): Promise<ActionResult> {
   try {

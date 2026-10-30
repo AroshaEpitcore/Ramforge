@@ -18,31 +18,43 @@ export function BundleCard({ bundle, className }: { bundle: Bundle; className?: 
         className,
       )}
     >
-      <Link href={`/bundles/${bundle.slug}`} className="relative block aspect-video overflow-hidden">
-        <Image
-          src={bundle.thumbnailUrl}
-          alt={bundle.title}
-          fill
-          sizes="(max-width: 768px) 100vw, 33vw"
-          className="object-cover transition-transform duration-500 group-hover:scale-105"
-        />
+      <Link
+        href={`/bundles/${bundle.slug}`}
+        className="relative block aspect-video overflow-hidden"
+      >
+        {bundle.thumbnailUrl ? (
+          <Image
+            src={bundle.thumbnailUrl}
+            alt={bundle.title}
+            fill
+            sizes="(max-width: 768px) 100vw, 33vw"
+            className="object-cover transition-transform duration-500 group-hover:scale-105"
+          />
+        ) : (
+          <div className="flex size-full items-center justify-center bg-gradient-to-br from-primary/25 to-background">
+            <Layers className="size-10 text-primary/70" />
+          </div>
+        )}
         <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-transparent" />
-        <div className="absolute left-2 top-2 flex gap-1">
+        <div className="absolute top-2 left-2 flex gap-1">
           <Badge className="gap-1">
             <Layers className="size-3" />
             {bundle.videoCount} videos
           </Badge>
         </div>
         {savePercent > 0 && (
-          <div className="absolute right-2 top-2">
+          <div className="absolute top-2 right-2">
             <Badge variant="sale">Save {savePercent}%</Badge>
           </div>
         )}
       </Link>
 
       <div className="flex flex-1 flex-col gap-2 p-4">
-        <h3 className="font-semibold leading-snug">
-          <Link href={`/bundles/${bundle.slug}`} className="line-clamp-1 after:absolute after:inset-0">
+        <h3 className="leading-snug font-semibold">
+          <Link
+            href={`/bundles/${bundle.slug}`}
+            className="line-clamp-1 after:absolute after:inset-0"
+          >
             {bundle.title}
           </Link>
         </h3>

@@ -2,7 +2,7 @@ import { env } from "@/lib/env";
 import { stripe } from "@/lib/stripe/server";
 import { db } from "@/server/db";
 import { redeemCoupon } from "@/server/services/coupons";
-import { grantAccess, revokeOrderAccess } from "@/server/services/entitlements";
+import { grantOrderAccess, revokeOrderAccess } from "@/server/services/entitlements";
 import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
 
@@ -40,7 +40,7 @@ export async function POST(req: NextRequest) {
       if (orderId) {
         const order = await db.order.findUnique({
           where: { id: orderId },
-          include: { items: true },
+          select: { id: true, status: true, couponId: true },
         });
         if (order && order.status !== "PAID") {
           await db.order.update({
@@ -51,18 +51,7 @@ export async function POST(req: NextRequest) {
                 typeof session.payment_intent === "string" ? session.payment_intent : null,
             },
           });
-          for (const item of order.items) {
-            if (item.courseId || item.videoId) {
-              await grantAccess({
-                userId: order.userId,
-                courseId: item.courseId ?? undefined,
-                videoId: item.videoId ?? undefined,
-                type: item.type,
-                orderId: order.id,
-                rentalDays: item.rentalDays ?? undefined,
-              });
-            }
-          }
+          await grantOrderAccess(order.id);
           if (order.couponId) await redeemCoupon(order.couponId);
         }
       }

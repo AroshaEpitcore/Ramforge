@@ -62,6 +62,18 @@ export const reorderLessonsSchema = z.object({
 });
 export type ReorderLessonsInput = z.infer<typeof reorderLessonsSchema>;
 
+export const bundleSchema = z.object({
+  id: z.string().optional(),
+  title: z.string().trim().min(2, "Enter a title").max(120),
+  slug: z.string().trim().max(80).optional(),
+  description: z.string().trim().min(1, "Enter a description").max(2000),
+  thumbnailUrl: z.string().trim().optional(),
+  priceMajor: z.number().min(0).max(100000),
+  status: z.enum(["DRAFT", "PUBLISHED", "ARCHIVED"]),
+  videoIds: z.array(z.string()),
+});
+export type BundleInput = z.infer<typeof bundleSchema>;
+
 export const bannerSchema = z.object({
   id: z.string().optional(),
   title: z.string().trim().min(2, "Enter a title").max(120),
