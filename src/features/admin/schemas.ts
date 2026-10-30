@@ -62,6 +62,28 @@ export const reorderLessonsSchema = z.object({
 });
 export type ReorderLessonsInput = z.infer<typeof reorderLessonsSchema>;
 
+export const bannerSchema = z.object({
+  id: z.string().optional(),
+  title: z.string().trim().min(2, "Enter a title").max(120),
+  subtitle: z.string().trim().max(200).optional(),
+  eyebrow: z.string().trim().max(60).optional(),
+  imageUrl: z.string().trim().url("Enter an image URL"),
+  ctaLabel: z.string().trim().max(40).optional(),
+  ctaHref: z.string().trim().max(200).optional(),
+  position: z.number().int().min(0).max(999),
+  active: z.boolean(),
+});
+export type BannerInput = z.infer<typeof bannerSchema>;
+
+export const emailTemplateSchema = z.object({
+  id: z.string().optional(),
+  key: z.string().trim().min(2, "Enter a key").max(60),
+  name: z.string().trim().min(2, "Enter a name").max(120),
+  subject: z.string().trim().min(1, "Enter a subject").max(200),
+  body: z.string().trim().min(1, "Enter the body").max(10000),
+});
+export type EmailTemplateInput = z.infer<typeof emailTemplateSchema>;
+
 export const couponSchema = z.object({
   id: z.string().optional(),
   code: z.string().trim().min(2, "Enter a code").max(40),

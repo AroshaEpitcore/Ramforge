@@ -10,6 +10,7 @@ import { VideoCard } from "@/components/shared/video-card";
 import { VideoGrid } from "@/components/shared/video-grid";
 import { buildMetadata } from "@/lib/seo";
 import { listStorefrontCategories } from "@/server/queries/categories";
+import { listActiveBanners } from "@/server/queries/marketing";
 import { listPublishedVideos } from "@/server/queries/videos";
 import { mockBanners, mockBlogPosts, mockBundles } from "@/mocks";
 import type { Metadata } from "next";
@@ -23,11 +24,13 @@ export const metadata: Metadata = buildMetadata({
 });
 
 export default async function HomePage() {
-  const banners = mockBanners.filter((b) => b.active);
-  const [videos, categories] = await Promise.all([
+  const [videos, categories, realBanners] = await Promise.all([
     listPublishedVideos(),
     listStorefrontCategories(),
+    listActiveBanners(),
   ]);
+  // Fall back to the sample hero imagery until an admin adds real banners.
+  const banners = realBanners.length > 0 ? realBanners : mockBanners.filter((b) => b.active);
   const featured = videos[0];
   const latest = videos.slice(1, 5);
   const newReleases = videos.slice(0, 8);

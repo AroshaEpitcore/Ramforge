@@ -1,66 +1,28 @@
 import { PageHeader } from "@/components/layout/page-header";
-import { Badge } from "@/components/ui/badge";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { ROLE_PERMISSIONS } from "@/lib/rbac";
+import { UsersManager } from "@/features/admin/components/users-manager";
+import { requirePermission } from "@/lib/rbac";
 import { buildMetadata } from "@/lib/seo";
-import type { Role } from "@/types";
+import { listCustomers } from "@/server/queries/admin-ops";
+import { getCurrentUser } from "@/server/current-user";
 import type { Metadata } from "next";
+import { redirect } from "next/navigation";
 
 export const metadata: Metadata = buildMetadata({ title: "Users & roles" });
 
-const ROLE_LABELS: Record<Role, string> = {
-  SUPER_ADMIN: "Super Admin",
-  STORE_MANAGER: "Store Manager",
-  CONTENT_UPLOADER: "Content Uploader",
-  SUPPORT_STAFF: "Support Staff",
-  CUSTOMER: "Customer",
-};
+export default async function AdminUsersPage() {
+  const user = await getCurrentUser();
+  if (!user) redirect("/login?callbackUrl=/admin/users");
+  requirePermission(user, "roles:manage");
 
-export default function AdminUsersPage() {
-  const roles = Object.keys(ROLE_PERMISSIONS) as Role[];
+  const users = await listCustomers();
 
   return (
     <div className="space-y-6">
       <PageHeader
         title="Users & roles"
-        description="Role-based access control. Permissions are defined in lib/rbac.ts and enforced server-side."
+        description="Assign roles. You can't change your own role."
       />
-      <div className="grid gap-4 md:grid-cols-2">
-        {roles.map((role) => {
-          const perms = ROLE_PERMISSIONS[role];
-          return (
-            <Card key={role}>
-              <CardHeader>
-                <CardTitle className="flex items-center justify-between">
-                  {ROLE_LABELS[role]}
-                  <Badge variant="muted">{perms.length} permissions</Badge>
-                </CardTitle>
-                <CardDescription>
-                  {role === "SUPER_ADMIN" ? "Full access to everything." : null}
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                {perms.length === 0 ? (
-                  <p className="text-sm text-muted-foreground">No admin permissions.</p>
-                ) : (
-                  <div className="flex flex-wrap gap-1">
-                    {perms.slice(0, 10).map((p) => (
-                      <Badge key={p} variant="outline" className="font-mono text-[10px]">
-                        {p}
-                      </Badge>
-                    ))}
-                    {perms.length > 10 && (
-                      <Badge variant="muted" className="text-[10px]">
-                        +{perms.length - 10} more
-                      </Badge>
-                    )}
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          );
-        })}
-      </div>
+      <UsersManager users={users} currentUserId={user.id} />
     </div>
   );
 }
