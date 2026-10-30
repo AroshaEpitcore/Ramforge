@@ -123,6 +123,31 @@ export async function listVideoOptions(): Promise<{ id: string; title: string }[
   return db.video.findMany({ orderBy: { title: "asc" }, select: { id: true, title: true } });
 }
 
+export interface AdminCouponRow {
+  id: string;
+  code: string;
+  type: "PERCENT" | "FIXED";
+  amount: number;
+  active: boolean;
+  maxRedemptions: number | null;
+  timesRedeemed: number;
+  expiresAt: string | null;
+}
+
+export async function listCouponsForAdmin(): Promise<AdminCouponRow[]> {
+  const rows = await db.coupon.findMany({ orderBy: { createdAt: "desc" } });
+  return rows.map((c) => ({
+    id: c.id,
+    code: c.code,
+    type: c.type,
+    amount: c.amount,
+    active: c.active,
+    maxRedemptions: c.maxRedemptions,
+    timesRedeemed: c.timesRedeemed,
+    expiresAt: c.expiresAt ? c.expiresAt.toISOString() : null,
+  }));
+}
+
 /** Ordered lessons of a course, for the reorder UI. */
 export async function getCourseLessons(
   courseId: string,

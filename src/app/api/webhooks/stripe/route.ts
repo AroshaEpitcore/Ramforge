@@ -1,6 +1,7 @@
 import { env } from "@/lib/env";
 import { stripe } from "@/lib/stripe/server";
 import { db } from "@/server/db";
+import { redeemCoupon } from "@/server/services/coupons";
 import { grantAccess, revokeOrderAccess } from "@/server/services/entitlements";
 import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
@@ -62,6 +63,7 @@ export async function POST(req: NextRequest) {
               });
             }
           }
+          if (order.couponId) await redeemCoupon(order.couponId);
         }
       }
     } else if (event.type === "charge.refunded") {

@@ -15,16 +15,21 @@ export const metadata: Metadata = buildMetadata({ title: "Order confirmation" })
 export default async function OrderConfirmationPage({
   searchParams,
 }: {
-  searchParams: Promise<{ session_id?: string }>;
+  searchParams: Promise<{ session_id?: string; order?: string }>;
 }) {
-  const { session_id } = await searchParams;
+  const { session_id, order: orderId } = await searchParams;
 
-  const order = session_id
-    ? await db.order.findFirst({
-        where: { stripeCheckoutId: session_id },
-        select: { id: true, status: true, total: true, _count: { select: { items: true } } },
-      })
-    : null;
+  const select = {
+    id: true,
+    status: true,
+    total: true,
+    _count: { select: { items: true } },
+  } as const;
+  const order = orderId
+    ? await db.order.findUnique({ where: { id: orderId }, select })
+    : session_id
+      ? await db.order.findFirst({ where: { stripeCheckoutId: session_id }, select })
+      : null;
 
   const paid = order?.status === "PAID";
 

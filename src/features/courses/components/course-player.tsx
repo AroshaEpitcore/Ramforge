@@ -9,6 +9,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Duration } from "@/components/ui/duration";
 import { Label } from "@/components/ui/label";
 import { buyCourse } from "@/features/commerce/actions";
+import { CouponField } from "@/features/commerce/components/coupon-field";
 import { formatCurrency } from "@/lib/formatters";
 import { cn } from "@/lib/utils";
 import type { CourseDetail, Lesson } from "@/types";
@@ -40,6 +41,8 @@ export function CoursePlayer({
   const [playback, setPlayback] = useState<Playback>(null);
   const [consent, setConsent] = useState(false);
   const [buying, setBuying] = useState(false);
+  const [couponCode, setCouponCode] = useState<string | null>(null);
+  const [finalPrice, setFinalPrice] = useState<number | null>(null);
 
   const price = course.salePrice ?? course.price;
 
@@ -65,7 +68,11 @@ export function CoursePlayer({
 
   const onBuy = async () => {
     setBuying(true);
-    const res = await buyCourse({ id: course.id, waiverConsent: true });
+    const res = await buyCourse({
+      id: course.id,
+      waiverConsent: true,
+      couponCode: couponCode ?? undefined,
+    });
     setBuying(false);
     if (!res.ok) {
       toast.error("Could not start checkout", { description: res.error });
@@ -119,7 +126,24 @@ export function CoursePlayer({
                 </Badge>
               ) : price > 0 && paymentsEnabled ? (
                 <div className="space-y-3">
-                  <p className="text-2xl font-bold tabular-nums">{formatCurrency(price)}</p>
+                  <div className="flex items-baseline gap-2">
+                    <p className="text-2xl font-bold tabular-nums">
+                      {formatCurrency(finalPrice ?? price)}
+                    </p>
+                    {finalPrice != null && finalPrice < price && (
+                      <span className="text-muted-foreground tabular-nums line-through">
+                        {formatCurrency(price)}
+                      </span>
+                    )}
+                  </div>
+                  <CouponField
+                    kind="course"
+                    itemId={course.id}
+                    onApplied={(c, fp) => {
+                      setCouponCode(c);
+                      setFinalPrice(fp);
+                    }}
+                  />
                   <Label className="items-start gap-2 font-normal">
                     <Checkbox
                       className="mt-0.5"

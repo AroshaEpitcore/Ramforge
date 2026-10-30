@@ -6,6 +6,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { buyVideo } from "@/features/commerce/actions";
+import { CouponField } from "@/features/commerce/components/coupon-field";
 import { formatCurrency } from "@/lib/formatters";
 import { Check, Lock } from "lucide-react";
 import { useState } from "react";
@@ -26,10 +27,16 @@ export function VideoAccessBox({
 }) {
   const [consent, setConsent] = useState(false);
   const [buying, setBuying] = useState(false);
+  const [couponCode, setCouponCode] = useState<string | null>(null);
+  const [finalPrice, setFinalPrice] = useState<number | null>(null);
 
   const onBuy = async () => {
     setBuying(true);
-    const res = await buyVideo({ id: videoId, waiverConsent: true });
+    const res = await buyVideo({
+      id: videoId,
+      waiverConsent: true,
+      couponCode: couponCode ?? undefined,
+    });
     setBuying(false);
     if (!res.ok) {
       toast.error("Could not start checkout", { description: res.error });
@@ -68,7 +75,24 @@ export function VideoAccessBox({
             </div>
             {paymentsEnabled && price > 0 ? (
               <>
-                <span className="text-3xl font-bold tabular-nums">{formatCurrency(price)}</span>
+                <div className="flex items-baseline gap-2">
+                  <span className="text-3xl font-bold tabular-nums">
+                    {formatCurrency(finalPrice ?? price)}
+                  </span>
+                  {finalPrice != null && finalPrice < price && (
+                    <span className="text-muted-foreground tabular-nums line-through">
+                      {formatCurrency(price)}
+                    </span>
+                  )}
+                </div>
+                <CouponField
+                  kind="video"
+                  itemId={videoId}
+                  onApplied={(c, fp) => {
+                    setCouponCode(c);
+                    setFinalPrice(fp);
+                  }}
+                />
                 <Label className="items-start gap-2 font-normal">
                   <Checkbox
                     className="mt-0.5"

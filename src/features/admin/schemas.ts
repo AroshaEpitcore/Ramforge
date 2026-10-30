@@ -61,3 +61,16 @@ export const reorderLessonsSchema = z.object({
   videoIds: z.array(z.string().min(1)).min(1),
 });
 export type ReorderLessonsInput = z.infer<typeof reorderLessonsSchema>;
+
+export const couponSchema = z.object({
+  id: z.string().optional(),
+  code: z.string().trim().min(2, "Enter a code").max(40),
+  type: z.enum(["PERCENT", "FIXED"]),
+  // PERCENT: 0–100; FIXED: MAJOR units (converted to minor in the action).
+  amount: z.number().min(0, "Enter an amount").max(100000),
+  active: z.boolean(),
+  // 0 / empty → unlimited.
+  maxRedemptions: z.number().int().min(0).max(1_000_000),
+  expiresAt: z.string().optional(),
+});
+export type CouponInput = z.infer<typeof couponSchema>;
