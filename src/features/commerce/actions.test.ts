@@ -13,7 +13,10 @@ const { db, requireCurrentUser, isPaymentsEnabled, createCheckoutSession } = vi.
 
 vi.mock("@/server/db", () => ({ db }));
 vi.mock("@/server/current-user", () => ({ requireCurrentUser }));
-vi.mock("@/server/services/settings", () => ({ isPaymentsEnabled }));
+vi.mock("@/server/services/settings", () => ({
+  isPaymentsEnabled,
+  getVatRatePercent: vi.fn(async () => 0),
+}));
 vi.mock("@/lib/stripe/server", () => ({ createCheckoutSession }));
 vi.mock("@/lib/env", () => ({ env: { NEXT_PUBLIC_APP_URL: "http://localhost:3000" } }));
 

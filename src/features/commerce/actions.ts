@@ -8,7 +8,7 @@ import { requireCurrentUser } from "@/server/current-user";
 import { grantOrderAccess } from "@/server/services/entitlements";
 import { redeemCoupon, validateCoupon } from "@/server/services/coupons";
 import { sendPurchaseConfirmation } from "@/server/services/order-notifications";
-import { isPaymentsEnabled } from "@/server/services/settings";
+import { getVatRatePercent, isPaymentsEnabled } from "@/server/services/settings";
 import type { ActionResult } from "@/types";
 import { z } from "zod";
 
@@ -16,6 +16,8 @@ const buySchema = z.object({
   id: z.string().min(1),
   waiverConsent: z.boolean().refine((v) => v === true, "You must accept the terms to continue."),
   couponCode: z.string().trim().optional(),
+  /** Video only: rent for the configured window instead of buying. */
+  rental: z.boolean().optional(),
 });
 
 const previewSchema = z.object({
@@ -40,21 +42,28 @@ async function startCheckout(opts: {
   userId: string;
   userEmail: string;
   cancelPath: string;
+  entitlementType?: "STREAM" | "RENTAL" | "DOWNLOAD";
+  rentalDays?: number;
 }): Promise<ActionResult<{ url: string }>> {
+  const vatRate = await getVatRatePercent();
+  const taxTotal = vatRate > 0 ? Math.round((opts.finalPrice * vatRate) / 100) : 0;
+  const grandTotal = opts.finalPrice + taxTotal;
+
   const order = await db.order.create({
     data: {
       userId: opts.userId,
       status: "PENDING",
       subtotal: opts.subtotal,
-      taxTotal: 0,
-      total: opts.finalPrice,
+      taxTotal,
+      total: grandTotal,
       currency: siteConfig.currency,
       couponId: opts.couponId ?? null,
       waiverConsent: true,
       waiverConsentAt: new Date(),
       items: {
         create: {
-          type: "STREAM",
+          type: opts.entitlementType ?? "STREAM",
+          rentalDays: opts.rentalDays ?? null,
           unitPrice: opts.subtotal,
           quantity: 1,
           ...(opts.kind === "course"
@@ -69,7 +78,7 @@ async function startCheckout(opts: {
   });
 
   // Free after discount → grant immediately, no Stripe (which rejects $0).
-  if (opts.finalPrice <= 0) {
+  if (grandTotal <= 0) {
     await db.order.update({ where: { id: order.id }, data: { status: "PAID" } });
     await grantOrderAccess(order.id);
     if (opts.couponId) await redeemCoupon(opts.couponId);
@@ -78,7 +87,10 @@ async function startCheckout(opts: {
   }
 
   const session = await createCheckoutSession({
-    lines: [{ name: opts.title, amountMinor: opts.finalPrice }],
+    lines: [
+      { name: opts.title, amountMinor: opts.finalPrice },
+      ...(taxTotal > 0 ? [{ name: `VAT (${vatRate}%)`, amountMinor: taxTotal }] : []),
+    ],
     customerEmail: opts.userEmail,
     successUrl: `${base()}/order-confirmation?session_id={CHECKOUT_SESSION_ID}`,
     cancelUrl: `${base()}${opts.cancelPath}`,
@@ -199,21 +211,32 @@ export async function buyVideo(raw: unknown): Promise<ActionResult<{ url: string
         salePrice: true,
         status: true,
         accessMode: true,
+        rentalDays: true,
+        rentalPrice: true,
       },
     });
     if (!video || video.status !== "PUBLISHED" || video.accessMode === "FREE") {
       return fail("Video not found.");
     }
 
-    const price = video.salePrice ?? video.price;
+    const rental = Boolean(parsed.data.rental);
+    if (rental && (!video.rentalDays || !video.rentalPrice)) {
+      return fail("This video isn't available to rent.");
+    }
+    const price = rental ? video.rentalPrice! : (video.salePrice ?? video.price);
     if (price <= 0) return fail("This video is free.");
 
     const user = await requireCurrentUser();
     const owned = await db.purchase.findFirst({
-      where: { userId: user.id, videoId: video.id, revokedAt: null },
+      where: {
+        userId: user.id,
+        videoId: video.id,
+        revokedAt: null,
+        OR: [{ expiresAt: null }, { expiresAt: { gt: new Date() } }],
+      },
       select: { id: true },
     });
-    if (owned) return fail("You already own this video.");
+    if (owned) return fail("You already have access to this video.");
 
     const coupon = await resolveCoupon(parsed.data.couponCode, price);
     if (!coupon.ok) return fail(coupon.error, { couponCode: [coupon.error] });
@@ -221,13 +244,15 @@ export async function buyVideo(raw: unknown): Promise<ActionResult<{ url: string
     return await startCheckout({
       kind: "video",
       id: video.id,
-      title: video.title,
+      title: rental ? `${video.title} (${video.rentalDays}-day rental)` : video.title,
       subtotal: price,
       finalPrice: coupon.finalPrice,
       couponId: coupon.couponId,
       userId: user.id,
       userEmail: user.email,
       cancelPath: `/video/${video.slug}`,
+      entitlementType: rental ? "RENTAL" : "STREAM",
+      rentalDays: rental ? (video.rentalDays ?? undefined) : undefined,
     });
   } catch (e) {
     if (e instanceof Error && e.message === "UNAUTHENTICATED")

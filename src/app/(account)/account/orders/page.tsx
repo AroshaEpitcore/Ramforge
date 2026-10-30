@@ -1,5 +1,6 @@
 import { PageHeader } from "@/components/layout/page-header";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ORDER_STATUS_LABELS } from "@/config/constants";
@@ -10,6 +11,7 @@ import { getCurrentUser } from "@/server/current-user";
 import type { OrderStatus } from "@/types";
 import { Receipt } from "lucide-react";
 import type { Metadata } from "next";
+import Link from "next/link";
 import { redirect } from "next/navigation";
 
 export const metadata: Metadata = buildMetadata({ title: "Orders" });
@@ -54,6 +56,9 @@ export default async function OrdersPage() {
                   </p>
                 </div>
                 <span className="font-semibold tabular-nums">{formatCurrency(order.total)}</span>
+                <Button asChild variant="outline" size="sm">
+                  <Link href={`/account/orders/${order.id}/invoice`}>Invoice</Link>
+                </Button>
               </CardContent>
             </Card>
           ))}

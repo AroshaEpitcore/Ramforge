@@ -2,19 +2,39 @@
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
-import { exportNewsletterCsv, setPaymentsEnabled } from "@/features/admin/actions";
+import { exportNewsletterCsv, setPaymentsEnabled, setVatRate } from "@/features/admin/actions";
 import { Download } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 import { toast } from "sonner";
 
-export function SettingsPanel({ paymentsEnabled }: { paymentsEnabled: boolean }) {
+export function SettingsPanel({
+  paymentsEnabled,
+  vatRate,
+}: {
+  paymentsEnabled: boolean;
+  vatRate: number;
+}) {
   const router = useRouter();
   const [enabled, setEnabled] = useState(paymentsEnabled);
   const [saving, startSaving] = useTransition();
   const [exporting, setExporting] = useState(false);
+  const [vat, setVat] = useState(vatRate);
+  const [savingVat, setSavingVat] = useState(false);
+
+  const saveVat = async () => {
+    setSavingVat(true);
+    const res = await setVatRate(vat);
+    setSavingVat(false);
+    if (!res.ok) toast.error("Could not save", { description: res.error });
+    else {
+      toast.success("VAT rate saved");
+      router.refresh();
+    }
+  };
 
   const togglePayments = (next: boolean) => {
     setEnabled(next); // optimistic
@@ -63,6 +83,34 @@ export function SettingsPanel({ paymentsEnabled }: { paymentsEnabled: boolean })
             <Switch checked={enabled} onCheckedChange={togglePayments} disabled={saving} />
             Payments enabled
           </Label>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>VAT / sales tax</CardTitle>
+          <CardDescription>
+            A flat tax rate added at checkout (0 = no tax). For location-based tax, enable Stripe
+            Tax.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="flex items-end gap-3">
+          <div className="grid gap-1.5">
+            <Label htmlFor="vat">Rate (%)</Label>
+            <Input
+              id="vat"
+              type="number"
+              min="0"
+              max="100"
+              step="0.5"
+              className="w-28"
+              value={vat}
+              onChange={(e) => setVat(e.target.valueAsNumber || 0)}
+            />
+          </div>
+          <Button onClick={saveVat} loading={savingVat}>
+            Save
+          </Button>
         </CardContent>
       </Card>
 

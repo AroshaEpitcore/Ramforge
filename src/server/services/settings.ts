@@ -10,6 +10,7 @@ import type { Prisma } from "@/generated/prisma";
  */
 export const SETTING_KEYS = {
   paymentsEnabled: "payments.enabled",
+  vatRatePercent: "tax.vatRatePercent",
 } as const;
 
 export async function getSetting<T>(key: string, fallback: T): Promise<T> {
@@ -29,4 +30,10 @@ export async function setSetting(key: string, value: Prisma.InputJsonValue): Pro
 /** Whether paid courses/videos are currently sellable. Off by default. */
 export async function isPaymentsEnabled(): Promise<boolean> {
   return getSetting<boolean>(SETTING_KEYS.paymentsEnabled, false);
+}
+
+/** Flat VAT/sales-tax rate as a percentage (0 = no tax). */
+export async function getVatRatePercent(): Promise<number> {
+  const v = await getSetting<number>(SETTING_KEYS.vatRatePercent, 0);
+  return typeof v === "number" && v > 0 ? Math.min(100, v) : 0;
 }

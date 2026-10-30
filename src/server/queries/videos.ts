@@ -31,6 +31,7 @@ type VideoRow = {
   accessMode: "FREE" | "PAID" | "MEMBERS";
   allowDownload: boolean;
   rentalDays: number | null;
+  rentalPrice: number | null;
   status: "DRAFT" | "PUBLISHED" | "ARCHIVED";
   viewCount: number;
   publishedAt: Date | null;
@@ -56,6 +57,7 @@ const SELECT = {
   accessMode: true,
   allowDownload: true,
   rentalDays: true,
+  rentalPrice: true,
   status: true,
   viewCount: true,
   publishedAt: true,
@@ -94,6 +96,7 @@ function toVideo(v: VideoRow, agg?: { avg: number; count: number }): Video {
     accessMode: v.accessMode,
     allowDownload: v.allowDownload,
     rentalDays: v.rentalDays ?? undefined,
+    rentalPrice: v.rentalPrice,
     status: v.status,
     purchaseOptions: purchaseOptions(v),
     rating: agg?.avg ?? 0,

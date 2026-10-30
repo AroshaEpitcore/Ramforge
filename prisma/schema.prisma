@@ -220,6 +220,8 @@ model Video {
   accessMode    AccessMode @default(PAID)
   allowDownload Boolean    @default(false)
   rentalDays    Int?
+  // Price (minor units) to rent for `rentalDays`. Null = not rentable.
+  rentalPrice   Int?
   status        VideoStatus @default(DRAFT)
   // Scheduled publishing (see Course.publishAt).
   publishAt DateTime?

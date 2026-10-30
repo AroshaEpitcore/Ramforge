@@ -46,6 +46,9 @@ export const videoSchema = z
     fullAssetId: z.string().trim().max(200).optional(),
     accessMode: z.enum(["FREE", "PAID"]),
     priceMajor: z.number().min(0).max(100000),
+    // Rentals (0 days = not rentable).
+    rentalDays: z.number().int().min(0).max(365),
+    rentalPriceMajor: z.number().min(0).max(100000),
     status,
     publishAt: z.string().optional(),
     notes: z.string().trim().max(5000).optional(),

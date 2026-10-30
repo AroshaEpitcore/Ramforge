@@ -18,24 +18,31 @@ export function VideoAccessBox({
   isFree,
   owned,
   paymentsEnabled,
+  rentalDays,
+  rentalPrice,
 }: {
   videoId: string;
   price: number;
   isFree: boolean;
   owned: boolean;
   paymentsEnabled: boolean;
+  rentalDays?: number | null;
+  rentalPrice?: number | null;
 }) {
   const [consent, setConsent] = useState(false);
   const [buying, setBuying] = useState(false);
   const [couponCode, setCouponCode] = useState<string | null>(null);
   const [finalPrice, setFinalPrice] = useState<number | null>(null);
 
-  const onBuy = async () => {
+  const rentable = Boolean(rentalDays && rentalPrice);
+
+  const onBuy = async (rental = false) => {
     setBuying(true);
     const res = await buyVideo({
       id: videoId,
       waiverConsent: true,
-      couponCode: couponCode ?? undefined,
+      couponCode: rental ? undefined : (couponCode ?? undefined),
+      rental,
     });
     setBuying(false);
     if (!res.ok) {
@@ -103,9 +110,24 @@ export function VideoAccessBox({
                     I agree my access begins immediately and I waive my 14-day right to cancel.
                   </span>
                 </Label>
-                <Button fullWidth disabled={!consent || buying} loading={buying} onClick={onBuy}>
+                <Button
+                  fullWidth
+                  disabled={!consent || buying}
+                  loading={buying}
+                  onClick={() => onBuy(false)}
+                >
                   Buy now
                 </Button>
+                {rentable && (
+                  <Button
+                    fullWidth
+                    variant="outline"
+                    disabled={!consent || buying}
+                    onClick={() => onBuy(true)}
+                  >
+                    Rent {rentalDays} days — {formatCurrency(rentalPrice!)}
+                  </Button>
+                )}
               </>
             ) : (
               <>

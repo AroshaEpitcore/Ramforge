@@ -201,6 +201,11 @@ export async function saveVideo(raw: unknown): Promise<ActionResult<{ id: string
       fullAssetId: d.source === "MUX" ? nullify(d.fullAssetId) : null,
       accessMode: d.accessMode,
       price: d.accessMode === "PAID" ? toMinor(d.priceMajor) : 0,
+      rentalDays: d.accessMode === "PAID" && d.rentalDays > 0 ? d.rentalDays : null,
+      rentalPrice:
+        d.accessMode === "PAID" && d.rentalDays > 0 && d.rentalPriceMajor > 0
+          ? toMinor(d.rentalPriceMajor)
+          : null,
       status: d.status,
       publishAt: toDate(d.publishAt),
       notes: nullify(d.notes),
@@ -238,6 +243,18 @@ export async function setPaymentsEnabled(enabled: boolean): Promise<ActionResult
     await setSetting(SETTING_KEYS.paymentsEnabled, enabled);
     revalidatePath("/admin/settings");
     revalidatePath("/", "layout");
+    return { ok: true, data: undefined };
+  } catch (e) {
+    return handleError(e);
+  }
+}
+
+export async function setVatRate(percent: number): Promise<ActionResult> {
+  try {
+    await authorize("settings:manage");
+    const rate = Math.max(0, Math.min(100, Math.round(Number(percent) || 0)));
+    await setSetting(SETTING_KEYS.vatRatePercent, rate);
+    revalidatePath("/admin/settings");
     return { ok: true, data: undefined };
   } catch (e) {
     return handleError(e);

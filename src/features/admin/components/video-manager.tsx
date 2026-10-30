@@ -221,6 +221,8 @@ function VideoFormDialog({
       fullAssetId: editing?.fullAssetId ?? "",
       accessMode: editing?.accessMode === "PAID" ? "PAID" : "FREE",
       priceMajor: editing ? editing.price / 100 : 0,
+      rentalDays: editing?.rentalDays ?? 0,
+      rentalPriceMajor: editing?.rentalPrice ? editing.rentalPrice / 100 : 0,
       status: editing?.status ?? "DRAFT",
       publishAt: editing?.publishAt ? editing.publishAt.slice(0, 16) : "",
       notes: editing?.notes ?? "",
@@ -411,6 +413,30 @@ function VideoFormDialog({
               </div>
             )}
           </div>
+
+          {accessMode === "PAID" && (
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div className="grid gap-2">
+                <Label htmlFor="v-rdays">Rental length (days · 0 = not rentable)</Label>
+                <Input
+                  id="v-rdays"
+                  type="number"
+                  min="0"
+                  {...register("rentalDays", { valueAsNumber: true })}
+                />
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="v-rprice">Rental price (major units)</Label>
+                <Input
+                  id="v-rprice"
+                  type="number"
+                  step="0.01"
+                  min="0"
+                  {...register("rentalPriceMajor", { valueAsNumber: true })}
+                />
+              </div>
+            </div>
+          )}
 
           <div className="grid gap-4 sm:grid-cols-2">
             <div className="grid gap-2">

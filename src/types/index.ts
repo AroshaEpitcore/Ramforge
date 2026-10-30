@@ -77,6 +77,8 @@ export interface Video {
   allowDownload: boolean;
   /** Default rental window in days when rentable. */
   rentalDays?: number | null;
+  /** Rental price in minor units (null = not rentable). */
+  rentalPrice?: number | null;
   status: VideoStatus;
   purchaseOptions: PurchaseOption[];
   rating: number;

@@ -101,6 +101,68 @@ export async function listUserOrders(userId: string): Promise<AccountOrderRow[]>
   }));
 }
 
+export interface InvoiceData {
+  id: string;
+  status: string;
+  subtotal: number;
+  taxTotal: number;
+  total: number;
+  currency: string;
+  date: string;
+  invoiceNumber: string | null;
+  customerEmail: string;
+  items: { title: string; type: string; quantity: number; unitPrice: number }[];
+}
+
+/** A single order belonging to the user, for the invoice view. */
+export async function getUserOrderDetail(
+  userId: string,
+  orderId: string,
+): Promise<InvoiceData | null> {
+  const o = await db.order.findFirst({
+    where: { id: orderId, userId },
+    select: {
+      id: true,
+      status: true,
+      subtotal: true,
+      taxTotal: true,
+      total: true,
+      currency: true,
+      createdAt: true,
+      invoiceNumber: true,
+      user: { select: { email: true } },
+      items: {
+        select: {
+          unitPrice: true,
+          quantity: true,
+          type: true,
+          course: { select: { title: true } },
+          video: { select: { title: true } },
+          bundle: { select: { title: true } },
+        },
+      },
+    },
+  });
+  if (!o) return null;
+  return {
+    id: o.id,
+    status: o.status,
+    subtotal: o.subtotal,
+    taxTotal: o.taxTotal,
+    total: o.total,
+    currency: o.currency,
+    date: o.createdAt.toISOString(),
+    invoiceNumber: o.invoiceNumber,
+    customerEmail: o.user.email,
+    items: o.items.map((i) => ({
+      title: i.course?.title ?? i.video?.title ?? i.bundle?.title ?? "Item",
+      type: i.type,
+      quantity: i.quantity,
+      unitPrice: i.unitPrice,
+    })),
+  };
+}
+
 /** True if the user owns the given course (active entitlement). */
 export async function ownsCourse(userId: string, courseId: string): Promise<boolean> {
   const now = new Date();
