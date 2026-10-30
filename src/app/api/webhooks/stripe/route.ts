@@ -3,6 +3,7 @@ import { stripe } from "@/lib/stripe/server";
 import { db } from "@/server/db";
 import { redeemCoupon } from "@/server/services/coupons";
 import { grantOrderAccess, revokeOrderAccess } from "@/server/services/entitlements";
+import { sendPurchaseConfirmation } from "@/server/services/order-notifications";
 import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
 
@@ -53,6 +54,7 @@ export async function POST(req: NextRequest) {
           });
           await grantOrderAccess(order.id);
           if (order.couponId) await redeemCoupon(order.couponId);
+          await sendPurchaseConfirmation(order.id);
         }
       }
     } else if (event.type === "charge.refunded") {

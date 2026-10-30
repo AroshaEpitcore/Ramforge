@@ -7,6 +7,7 @@ import { db } from "@/server/db";
 import { requireCurrentUser } from "@/server/current-user";
 import { grantOrderAccess } from "@/server/services/entitlements";
 import { redeemCoupon, validateCoupon } from "@/server/services/coupons";
+import { sendPurchaseConfirmation } from "@/server/services/order-notifications";
 import { isPaymentsEnabled } from "@/server/services/settings";
 import type { ActionResult } from "@/types";
 import { z } from "zod";
@@ -72,6 +73,7 @@ async function startCheckout(opts: {
     await db.order.update({ where: { id: order.id }, data: { status: "PAID" } });
     await grantOrderAccess(order.id);
     if (opts.couponId) await redeemCoupon(opts.couponId);
+    await sendPurchaseConfirmation(order.id);
     return { ok: true, data: { url: `${base()}/order-confirmation?order=${order.id}` } };
   }
 
