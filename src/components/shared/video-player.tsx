@@ -5,7 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { Maximize, Pause, Play, Settings, Volume2, VolumeX } from "lucide-react";
 import Image from "next/image";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type MouseEvent } from "react";
 
 export interface PlaybackSource {
   /** Direct media URL (provider resolves a signed, expiring URL at runtime). */
@@ -36,6 +36,16 @@ export function VideoPlayer({ source, title, className, isPreview }: VideoPlayer
   const videoRef = useRef<HTMLVideoElement>(null);
   const [playing, setPlaying] = useState(false);
   const [muted, setMuted] = useState(false);
+  const [progress, setProgress] = useState(0); // 0..1 of duration
+
+  const seek = (e: MouseEvent<HTMLDivElement>) => {
+    const el = videoRef.current;
+    if (!el || !el.duration) return;
+    const rect = e.currentTarget.getBoundingClientRect();
+    const frac = Math.min(1, Math.max(0, (e.clientX - rect.left) / rect.width));
+    el.currentTime = frac * el.duration;
+    setProgress(frac);
+  };
 
   const togglePlay = () => {
     const el = videoRef.current;
@@ -97,9 +107,14 @@ export function VideoPlayer({ source, title, className, isPreview }: VideoPlayer
         <video
           ref={videoRef}
           poster={source.poster}
-          className="size-full object-contain"
+          className="size-full object-cover"
           onPlay={() => setPlaying(true)}
           onPause={() => setPlaying(false)}
+          onEnded={() => setPlaying(false)}
+          onTimeUpdate={(e) => {
+            const el = e.currentTarget;
+            setProgress(el.duration ? el.currentTime / el.duration : 0);
+          }}
           playsInline
         />
       ) : (
@@ -139,9 +154,21 @@ export function VideoPlayer({ source, title, className, isPreview }: VideoPlayer
 
       {/* Control bar */}
       <div className="absolute inset-x-0 bottom-0 flex flex-col gap-2 bg-gradient-to-t from-black/80 to-transparent p-3 opacity-0 transition-opacity duration-200 group-hover:opacity-100 focus-within:opacity-100">
-        {/* Non-functional seek bar (shell) */}
-        <div className="h-1 w-full overflow-hidden rounded-full bg-white/25">
-          <div className="h-full w-1/3 rounded-full bg-primary" />
+        {/* Seek bar — click to scrub */}
+        <div
+          className="h-1.5 w-full cursor-pointer overflow-hidden rounded-full bg-white/25"
+          onClick={seek}
+          role="slider"
+          aria-label="Seek"
+          aria-valuemin={0}
+          aria-valuemax={100}
+          aria-valuenow={Math.round(progress * 100)}
+          tabIndex={0}
+        >
+          <div
+            className="h-full rounded-full bg-primary transition-[width] duration-100"
+            style={{ width: `${progress * 100}%` }}
+          />
         </div>
         <div className="flex items-center gap-2">
           <Button
