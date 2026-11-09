@@ -1,8 +1,7 @@
 "use client";
 
-import { VideoPlayer } from "@/components/shared/video-player";
+import { VideoJsPlayer } from "@/components/shared/videojs-player";
 import { YouTubeEmbed } from "@/components/shared/youtube-embed";
-import { cn } from "@/lib/utils";
 import { useEffect, useState } from "react";
 
 interface PlaybackResponse {
@@ -16,23 +15,19 @@ type Resolved = { kind: "youtube"; youtubeId: string } | { kind: "mux"; url: str
 
 /**
  * Client player that resolves a real playback source from the access-controlled
- * `/api/videos/[id]/playback` endpoint, then renders the right surface:
+ * `/api/videos/[id]/playback` endpoint, then renders:
  *  - YouTube  → privacy-enhanced embed
- *  - Self-hosted (Neon Object Storage / Mux) → native `<video>` via {@link VideoPlayer}
+ *  - Self-hosted (Neon Object Storage / Mux) → Video.js (industry-standard controls)
  *  - No access / not ready → a clear message (403 / 401 / 409 / 429 from the API)
  */
 export function PlaybackPlayer({
   videoId,
   poster,
   title,
-  isPreview,
-  fit = "aspect",
 }: {
   videoId: string;
   poster?: string;
   title?: string;
-  isPreview?: boolean;
-  fit?: "aspect" | "screen";
 }) {
   const [resolved, setResolved] = useState<Resolved | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -64,38 +59,25 @@ export function PlaybackPlayer({
 
   if (error) {
     return (
-      <div
-        className={cn(
-          "flex items-center justify-center bg-black px-6 text-center text-sm text-white/80",
-          fit === "screen" ? "size-full" : "aspect-video w-full rounded-xl",
-        )}
-      >
+      <div className="flex aspect-video w-full items-center justify-center rounded-xl bg-black px-6 text-center text-sm text-white/80">
         {error}
       </div>
     );
   }
 
   if (resolved?.kind === "youtube") {
-    if (fit === "screen") {
-      return (
-        <div className="flex size-full items-center justify-center">
-          <YouTubeEmbed
-            youtubeId={resolved.youtubeId}
-            title={title}
-            className="max-h-full w-full max-w-[calc(100vh*16/9)]"
-          />
-        </div>
-      );
-    }
     return <YouTubeEmbed youtubeId={resolved.youtubeId} title={title} />;
   }
 
+  if (resolved?.kind === "mux") {
+    return <VideoJsPlayer src={resolved.url} type="video/mp4" poster={poster} />;
+  }
+
+  // Loading: show the poster in a 16:9 frame until the source resolves.
   return (
-    <VideoPlayer
-      source={{ src: resolved?.kind === "mux" ? resolved.url : undefined, poster }}
-      title={title}
-      isPreview={isPreview}
-      fit={fit}
+    <div
+      className="aspect-video w-full rounded-xl bg-black bg-cover bg-center"
+      style={poster ? { backgroundImage: `url(${poster})` } : undefined}
     />
   );
 }
