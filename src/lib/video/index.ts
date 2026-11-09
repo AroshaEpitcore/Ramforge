@@ -3,6 +3,7 @@ import "server-only";
 import { env } from "@/lib/env";
 import { mockVideoProvider } from "./mock-provider";
 import { muxVideoProvider } from "./mux-provider";
+import { neonStorageProvider } from "./neon-provider";
 import type { VideoProvider } from "./types";
 
 export type { VideoProvider } from "./types";
@@ -18,6 +19,8 @@ export function getVideoProvider(): VideoProvider {
       return mockVideoProvider;
     case "mux":
       return muxVideoProvider;
+    case "neon":
+      return neonStorageProvider;
     case "cloudflare":
     case "bunny":
       throw new Error(

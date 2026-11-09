@@ -48,7 +48,7 @@ export const env = createEnv({
 
     // Video hosting provider. Paid lessons stream from Mux; free videos use
     // YouTube embeds. Defaults to the in-repo mock until Mux keys are set.
-    VIDEO_PROVIDER: z.enum(["mock", "mux", "cloudflare", "bunny"]).default("mock"),
+    VIDEO_PROVIDER: z.enum(["mock", "mux", "neon", "cloudflare", "bunny"]).default("mock"),
     VIDEO_SIGNING_KEY: z.string().optional(),
 
     // Mux (paid-lesson streaming). Optional so the app runs on the mock without
@@ -59,6 +59,16 @@ export const env = createEnv({
     MUX_SIGNING_KEY_ID: z.string().optional(),
     MUX_SIGNING_KEY: z.string().optional(),
     MUX_WEBHOOK_SECRET: z.string().optional(),
+
+    // Neon Object Storage (S3-compatible). Injected by `neon deploy` / `neon env
+    // pull`. Optional so the app runs on the mock without them; the storage
+    // client throws a clear error if used while any value is missing.
+    AWS_ENDPOINT_URL_S3: z.string().url().optional(),
+    AWS_ACCESS_KEY_ID: z.string().optional(),
+    AWS_SECRET_ACCESS_KEY: z.string().optional(),
+    AWS_REGION: z.string().optional(),
+    /** Bucket declared under `buckets` in `neon.ts`. */
+    NEON_STORAGE_BUCKET: z.string().default("assets"),
   },
   client: {
     NEXT_PUBLIC_APP_URL: z.string().url().default("http://localhost:3000"),
@@ -84,6 +94,11 @@ export const env = createEnv({
     MUX_SIGNING_KEY_ID: process.env.MUX_SIGNING_KEY_ID,
     MUX_SIGNING_KEY: process.env.MUX_SIGNING_KEY,
     MUX_WEBHOOK_SECRET: process.env.MUX_WEBHOOK_SECRET,
+    AWS_ENDPOINT_URL_S3: process.env.AWS_ENDPOINT_URL_S3,
+    AWS_ACCESS_KEY_ID: process.env.AWS_ACCESS_KEY_ID,
+    AWS_SECRET_ACCESS_KEY: process.env.AWS_SECRET_ACCESS_KEY,
+    AWS_REGION: process.env.AWS_REGION,
+    NEON_STORAGE_BUCKET: process.env.NEON_STORAGE_BUCKET,
     NEXT_PUBLIC_APP_URL: process.env.NEXT_PUBLIC_APP_URL,
     NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY: process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY,
   },
