@@ -37,6 +37,7 @@ export function VideoPlayer({ source, title, className, isPreview }: VideoPlayer
   const [playing, setPlaying] = useState(false);
   const [muted, setMuted] = useState(false);
   const [progress, setProgress] = useState(0); // 0..1 of duration
+  const [aspectRatio, setAspectRatio] = useState(16 / 9); // adapts to the loaded video
 
   const seek = (e: MouseEvent<HTMLDivElement>) => {
     const el = videoRef.current;
@@ -96,18 +97,40 @@ export function VideoPlayer({ source, title, className, isPreview }: VideoPlayer
     };
   }, [source.src]);
 
+  // In fullscreen we hand over to the browser's native controls (our custom
+  // overlay can't render over a fullscreened <video>); inline we keep ours.
+  useEffect(() => {
+    const onFs = () => {
+      const el = videoRef.current;
+      if (el) el.controls = document.fullscreenElement === el;
+    };
+    document.addEventListener("fullscreenchange", onFs);
+    return () => document.removeEventListener("fullscreenchange", onFs);
+  }, []);
+
+  const isPortrait = aspectRatio < 1;
+
   return (
     <div
       className={cn(
-        "group relative aspect-video w-full overflow-hidden rounded-xl bg-black text-white",
+        "group relative mx-auto overflow-hidden rounded-xl bg-black text-white",
         className,
       )}
+      style={
+        isPortrait
+          ? { aspectRatio, height: "80vh", maxWidth: "100%" }
+          : { aspectRatio, width: "100%", maxHeight: "80vh" }
+      }
     >
       {source.src ? (
         <video
           ref={videoRef}
           poster={source.poster}
-          className="size-full object-cover"
+          className="size-full object-contain"
+          onLoadedMetadata={(e) => {
+            const el = e.currentTarget;
+            if (el.videoWidth && el.videoHeight) setAspectRatio(el.videoWidth / el.videoHeight);
+          }}
           onPlay={() => setPlaying(true)}
           onPause={() => setPlaying(false)}
           onEnded={() => setPlaying(false)}
