@@ -10,6 +10,7 @@ import { Separator } from "@/components/ui/separator";
 import { QUALITY_LABELS } from "@/config/constants";
 import { siteConfig } from "@/config/site";
 import { VideoAccessBox } from "@/features/commerce/components/video-access-box";
+import { PlaybackPlayer } from "@/features/videos/components/playback-player";
 import { FavouriteButton } from "@/features/favourites/components/favourite-button";
 import { ReviewForm } from "@/features/reviews/components/review-form";
 import { formatCompactNumber, formatDate, formatFileSize } from "@/lib/formatters";
@@ -64,6 +65,13 @@ export default async function VideoDetailsPage({ params }: { params: Promise<{ s
         <div className="min-w-0 space-y-6">
           {isFree && video.source === "YOUTUBE" && video.youtubeId ? (
             <YouTubeEmbed youtubeId={video.youtubeId} title={video.title} />
+          ) : isFree ? (
+            <PlaybackPlayer
+              videoId={video.id}
+              poster={video.thumbnailUrl || undefined}
+              title={video.title}
+              isPreview
+            />
           ) : (
             <VideoPlayer
               source={{ poster: video.thumbnailUrl || undefined }}
