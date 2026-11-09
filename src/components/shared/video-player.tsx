@@ -20,32 +20,17 @@ export interface VideoPlayerProps {
   className?: string;
   /** Marks this as a free preview/trailer rather than the full asset. */
   isPreview?: boolean;
-  /**
-   * Sizing mode:
-   *  - "aspect" (default): a fixed 16:9 stage that fills the parent's width.
-   *  - "screen": fills the parent's full area (width AND height), centring the
-   *    video — a cinema surface where landscape fills the width and portrait
-   *    fills the height. The parent must have a definite height.
-   */
-  fit?: "aspect" | "screen";
 }
 
 /**
- * Standard HTML5 video player using native browser controls (play, seek,
- * volume, fullscreen, speed, picture-in-picture). The video is `object-contain`
- * so any aspect ratio shows without cropping. HLS (`.m3u8`) plays natively on
- * Safari and via hls.js elsewhere; MP4 plays directly.
+ * Video player in a fixed 16:9 frame (the poster and the video occupy the exact
+ * same box, so there is no size jump). Uses the browser's native controls —
+ * single-click play, standard scrubber, volume, speed, fullscreen and PiP. HLS
+ * (`.m3u8`) plays natively on Safari and via hls.js elsewhere; MP4 plays directly.
  *
- * When no `source.src` is wired yet (e.g. a paid preview before purchase) it
- * renders the poster with a subtle overlay instead.
+ * With no `source.src` (e.g. a paid preview before purchase) it shows the poster.
  */
-export function VideoPlayer({
-  source,
-  title,
-  className,
-  isPreview,
-  fit = "aspect",
-}: VideoPlayerProps) {
+export function VideoPlayer({ source, title, className, isPreview }: VideoPlayerProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
 
   useEffect(() => {
@@ -78,7 +63,7 @@ export function VideoPlayer({
     };
   }, [source.src]);
 
-  // Placeholder (no real source yet, e.g. a paid preview): poster + overlay.
+  // Placeholder (no real source yet, e.g. a paid preview): poster.
   if (!source.src) {
     return (
       <div
@@ -106,23 +91,10 @@ export function VideoPlayer({
     );
   }
 
-  if (fit === "screen") {
-    return (
-      <div className={cn("flex size-full items-center justify-center bg-black", className)}>
-        <video
-          ref={videoRef}
-          poster={source.poster}
-          controls
-          controlsList="nodownload"
-          playsInline
-          className="max-h-full max-w-full"
-        />
-      </div>
-    );
-  }
-
   return (
-    <div className={cn("relative aspect-video w-full overflow-hidden bg-black", className)}>
+    <div
+      className={cn("relative aspect-video w-full overflow-hidden rounded-xl bg-black", className)}
+    >
       <video
         ref={videoRef}
         poster={source.poster}

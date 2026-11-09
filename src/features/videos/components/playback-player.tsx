@@ -1,6 +1,6 @@
 "use client";
 
-import { VideoJsPlayer } from "@/components/shared/videojs-player";
+import { VideoPlayer } from "@/components/shared/video-player";
 import { YouTubeEmbed } from "@/components/shared/youtube-embed";
 import { useEffect, useState } from "react";
 
@@ -17,8 +17,10 @@ type Resolved = { kind: "youtube"; youtubeId: string } | { kind: "mux"; url: str
  * Client player that resolves a real playback source from the access-controlled
  * `/api/videos/[id]/playback` endpoint, then renders:
  *  - YouTube  → privacy-enhanced embed
- *  - Self-hosted (Neon Object Storage / Mux) → Video.js (industry-standard controls)
+ *  - Self-hosted (Neon Object Storage / Mux) → {@link VideoPlayer}
  *  - No access / not ready → a clear message (403 / 401 / 409 / 429 from the API)
+ *
+ * All states use the same 16:9 frame, so there is no size jump while loading.
  */
 export function PlaybackPlayer({
   videoId,
@@ -69,15 +71,12 @@ export function PlaybackPlayer({
     return <YouTubeEmbed youtubeId={resolved.youtubeId} title={title} />;
   }
 
-  if (resolved?.kind === "mux") {
-    return <VideoJsPlayer src={resolved.url} type="video/mp4" poster={poster} />;
-  }
-
-  // Loading: show the poster in a 16:9 frame until the source resolves.
+  // Self-hosted video once resolved; the same component shows the poster while
+  // the signed URL is still being fetched (source.src undefined).
   return (
-    <div
-      className="aspect-video w-full rounded-xl bg-black bg-cover bg-center"
-      style={poster ? { backgroundImage: `url(${poster})` } : undefined}
+    <VideoPlayer
+      source={{ src: resolved?.kind === "mux" ? resolved.url : undefined, poster }}
+      title={title}
     />
   );
 }
