@@ -1,11 +1,9 @@
 "use client";
 
-import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
-import { Maximize, Pause, Play, Settings, Volume2, VolumeX } from "lucide-react";
 import Image from "next/image";
-import { useEffect, useRef, useState, type MouseEvent } from "react";
+import { useEffect, useRef } from "react";
 
 export interface PlaybackSource {
   /** Direct media URL (provider resolves a signed, expiring URL at runtime). */
@@ -22,51 +20,34 @@ export interface VideoPlayerProps {
   className?: string;
   /** Marks this as a free preview/trailer rather than the full asset. */
   isPreview?: boolean;
+  /**
+   * Sizing mode:
+   *  - "aspect" (default): a fixed 16:9 stage that fills the parent's width.
+   *  - "screen": fills the parent's full area (width AND height), centring the
+   *    video — a cinema surface where landscape fills the width and portrait
+   *    fills the height. The parent must have a definite height.
+   */
+  fit?: "aspect" | "screen";
 }
 
 /**
- * Provider-agnostic player **shell**. It accepts a resolved {@link PlaybackSource}
- * and never imports a specific hosting SDK — swap the real player in later
- * (Mux, Cloudflare Stream, Bunny, hls.js, …) behind this same prop shape.
+ * Standard HTML5 video player using native browser controls (play, seek,
+ * volume, fullscreen, speed, picture-in-picture). The video is `object-contain`
+ * so any aspect ratio shows without cropping. HLS (`.m3u8`) plays natively on
+ * Safari and via hls.js elsewhere; MP4 plays directly.
  *
- * If `source.src` is a direct media URL it plays via the native element;
- * otherwise it renders the poster with a play affordance (scaffold default).
+ * When no `source.src` is wired yet (e.g. a paid preview before purchase) it
+ * renders the poster with a subtle overlay instead.
  */
-export function VideoPlayer({ source, title, className, isPreview }: VideoPlayerProps) {
+export function VideoPlayer({
+  source,
+  title,
+  className,
+  isPreview,
+  fit = "aspect",
+}: VideoPlayerProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
-  const [playing, setPlaying] = useState(false);
-  const [muted, setMuted] = useState(false);
-  const [progress, setProgress] = useState(0); // 0..1 of duration
-  const [aspectRatio, setAspectRatio] = useState(16 / 9); // adapts to the loaded video
 
-  const seek = (e: MouseEvent<HTMLDivElement>) => {
-    const el = videoRef.current;
-    if (!el || !el.duration) return;
-    const rect = e.currentTarget.getBoundingClientRect();
-    const frac = Math.min(1, Math.max(0, (e.clientX - rect.left) / rect.width));
-    el.currentTime = frac * el.duration;
-    setProgress(frac);
-  };
-
-  const togglePlay = () => {
-    const el = videoRef.current;
-    if (el) {
-      if (el.paused) void el.play();
-      else el.pause();
-      return;
-    }
-    // No real source wired yet — just reflect intent in the shell.
-    setPlaying((p) => !p);
-  };
-
-  const toggleMute = () => {
-    const el = videoRef.current;
-    if (el) el.muted = !el.muted;
-    setMuted((m) => !m);
-  };
-
-  // Attach the source. HLS (.m3u8) plays natively on Safari; elsewhere we use
-  // hls.js (loaded only when needed). Non-HLS URLs play directly.
   useEffect(() => {
     const el = videoRef.current;
     if (!el || !source.src) return;
@@ -97,142 +78,59 @@ export function VideoPlayer({ source, title, className, isPreview }: VideoPlayer
     };
   }, [source.src]);
 
-  // In fullscreen we hand over to the browser's native controls (our custom
-  // overlay can't render over a fullscreened <video>); inline we keep ours.
-  useEffect(() => {
-    const onFs = () => {
-      const el = videoRef.current;
-      if (el) el.controls = document.fullscreenElement === el;
-    };
-    document.addEventListener("fullscreenchange", onFs);
-    return () => document.removeEventListener("fullscreenchange", onFs);
-  }, []);
+  // Placeholder (no real source yet, e.g. a paid preview): poster + overlay.
+  if (!source.src) {
+    return (
+      <div
+        className={cn(
+          "group relative aspect-video w-full overflow-hidden rounded-xl bg-black text-white",
+          className,
+        )}
+      >
+        {source.poster && (
+          <Image
+            src={source.poster}
+            alt={title ?? "Video"}
+            fill
+            className="object-cover opacity-80"
+            sizes="100vw"
+          />
+        )}
+        <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-black/20" />
+        {isPreview && (
+          <div className="absolute top-3 left-3">
+            <Badge variant="new">Preview</Badge>
+          </div>
+        )}
+      </div>
+    );
+  }
 
-  const isPortrait = aspectRatio < 1;
-
-  return (
-    <div
-      className={cn(
-        "group relative mx-auto overflow-hidden rounded-xl bg-black text-white",
-        className,
-      )}
-      style={
-        isPortrait
-          ? { aspectRatio, height: "80vh", maxWidth: "100%" }
-          : { aspectRatio, width: "100%", maxHeight: "80vh" }
-      }
-    >
-      {source.src ? (
+  if (fit === "screen") {
+    return (
+      <div className={cn("flex size-full items-center justify-center bg-black", className)}>
         <video
           ref={videoRef}
           poster={source.poster}
-          className="size-full object-contain"
-          onLoadedMetadata={(e) => {
-            const el = e.currentTarget;
-            if (el.videoWidth && el.videoHeight) setAspectRatio(el.videoWidth / el.videoHeight);
-          }}
-          onPlay={() => setPlaying(true)}
-          onPause={() => setPlaying(false)}
-          onEnded={() => setPlaying(false)}
-          onTimeUpdate={(e) => {
-            const el = e.currentTarget;
-            setProgress(el.duration ? el.currentTime / el.duration : 0);
-          }}
+          controls
+          controlsList="nodownload"
           playsInline
+          className="max-h-full max-w-full"
         />
-      ) : (
-        <>
-          {source.poster && (
-            <Image
-              src={source.poster}
-              alt={title ?? "Video"}
-              fill
-              className="object-cover opacity-80"
-              sizes="100vw"
-            />
-          )}
-          <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-black/20" />
-        </>
-      )}
-
-      {/* Center play button */}
-      {!playing && (
-        <button
-          type="button"
-          onClick={togglePlay}
-          aria-label="Play"
-          className="absolute inset-0 flex items-center justify-center outline-none"
-        >
-          <span className="flex size-16 items-center justify-center rounded-full bg-primary/90 text-primary-foreground shadow-2xl transition-transform group-hover:scale-105">
-            <Play className="size-7 translate-x-0.5 fill-current" />
-          </span>
-        </button>
-      )}
-
-      {/* Top bar */}
-      <div className="absolute inset-x-0 top-0 flex items-start justify-between gap-2 p-3">
-        {title && <p className="line-clamp-1 text-sm font-medium drop-shadow">{title}</p>}
-        {isPreview && <Badge variant="new">Preview</Badge>}
       </div>
+    );
+  }
 
-      {/* Control bar */}
-      <div className="absolute inset-x-0 bottom-0 flex flex-col gap-2 bg-gradient-to-t from-black/80 to-transparent p-3 opacity-0 transition-opacity duration-200 group-hover:opacity-100 focus-within:opacity-100">
-        {/* Seek bar — click to scrub */}
-        <div
-          className="h-1.5 w-full cursor-pointer overflow-hidden rounded-full bg-white/25"
-          onClick={seek}
-          role="slider"
-          aria-label="Seek"
-          aria-valuemin={0}
-          aria-valuemax={100}
-          aria-valuenow={Math.round(progress * 100)}
-          tabIndex={0}
-        >
-          <div
-            className="h-full rounded-full bg-primary transition-[width] duration-100"
-            style={{ width: `${progress * 100}%` }}
-          />
-        </div>
-        <div className="flex items-center gap-2">
-          <Button
-            variant="ghost"
-            size="icon"
-            className="size-8 text-white hover:bg-white/15 hover:text-white"
-            onClick={togglePlay}
-            aria-label={playing ? "Pause" : "Play"}
-          >
-            {playing ? <Pause className="size-4" /> : <Play className="size-4 fill-current" />}
-          </Button>
-          <Button
-            variant="ghost"
-            size="icon"
-            className="size-8 text-white hover:bg-white/15 hover:text-white"
-            onClick={toggleMute}
-            aria-label={muted ? "Unmute" : "Mute"}
-          >
-            {muted ? <VolumeX className="size-4" /> : <Volume2 className="size-4" />}
-          </Button>
-          <div className="ml-auto flex items-center gap-1">
-            <Button
-              variant="ghost"
-              size="icon"
-              className="size-8 text-white hover:bg-white/15 hover:text-white"
-              aria-label="Quality settings"
-            >
-              <Settings className="size-4" />
-            </Button>
-            <Button
-              variant="ghost"
-              size="icon"
-              className="size-8 text-white hover:bg-white/15 hover:text-white"
-              aria-label="Fullscreen"
-              onClick={() => videoRef.current?.requestFullscreen?.()}
-            >
-              <Maximize className="size-4" />
-            </Button>
-          </div>
-        </div>
-      </div>
+  return (
+    <div className={cn("relative aspect-video w-full overflow-hidden bg-black", className)}>
+      <video
+        ref={videoRef}
+        poster={source.poster}
+        controls
+        controlsList="nodownload"
+        playsInline
+        className="absolute inset-0 size-full object-contain"
+      />
     </div>
   );
 }

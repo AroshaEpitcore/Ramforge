@@ -61,25 +61,26 @@ export default async function VideoDetailsPage({ params }: { params: Promise<{ s
   return (
     <Container className="py-8">
       <JsonLd data={videoJsonLd(video)} />
+      {/* Full-width player above the two-column content. */}
+      <div className="mb-8">
+        {isFree && video.source === "YOUTUBE" && video.youtubeId ? (
+          <YouTubeEmbed youtubeId={video.youtubeId} title={video.title} />
+        ) : isFree ? (
+          <PlaybackPlayer
+            videoId={video.id}
+            poster={video.thumbnailUrl || undefined}
+            title={video.title}
+          />
+        ) : (
+          <VideoPlayer
+            source={{ poster: video.thumbnailUrl || undefined }}
+            title={video.title}
+            isPreview
+          />
+        )}
+      </div>
       <div className="grid gap-8 lg:grid-cols-[1fr_360px]">
         <div className="min-w-0 space-y-6">
-          {isFree && video.source === "YOUTUBE" && video.youtubeId ? (
-            <YouTubeEmbed youtubeId={video.youtubeId} title={video.title} />
-          ) : isFree ? (
-            <PlaybackPlayer
-              videoId={video.id}
-              poster={video.thumbnailUrl || undefined}
-              title={video.title}
-              isPreview
-            />
-          ) : (
-            <VideoPlayer
-              source={{ poster: video.thumbnailUrl || undefined }}
-              title={video.title}
-              isPreview
-            />
-          )}
-
           <div className="space-y-3">
             <div className="flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
               <Badge variant="secondary">{video.category.name}</Badge>

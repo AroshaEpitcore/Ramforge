@@ -26,22 +26,28 @@ export default async function WatchPage({ params }: { params: Promise<{ slug: st
   if (!video) notFound();
 
   return (
-    <div className="mx-auto flex w-full max-w-6xl flex-1 flex-col gap-4 p-4">
-      <PlaybackPlayer
-        videoId={video.id}
-        poster={video.thumbnailUrl || undefined}
-        title={video.title}
-      />
-      <div className="flex flex-wrap items-center gap-3">
-        <h1 className="text-xl font-semibold">{video.title}</h1>
-        <Badge variant={video.quality === "UHD_4K" ? "4k" : "hd"}>
-          {QUALITY_LABELS[video.quality]}
-        </Badge>
-        <span className="text-sm text-white/60">
-          <Duration seconds={video.durationSec} withIcon />
-        </span>
+    <>
+      {/* Full-bleed cinema surface: fills the screen width and remaining height. */}
+      <div className="relative flex min-h-0 flex-1 bg-black">
+        <PlaybackPlayer
+          videoId={video.id}
+          poster={video.thumbnailUrl || undefined}
+          title={video.title}
+          fit="screen"
+        />
       </div>
-      <p className="max-w-3xl text-sm text-white/70">{video.description}</p>
-    </div>
+      <div className="mx-auto w-full max-w-5xl shrink-0 p-4">
+        <div className="flex flex-wrap items-center gap-3">
+          <h1 className="text-xl font-semibold">{video.title}</h1>
+          <Badge variant={video.quality === "UHD_4K" ? "4k" : "hd"}>
+            {QUALITY_LABELS[video.quality]}
+          </Badge>
+          <span className="text-sm text-white/60">
+            <Duration seconds={video.durationSec} withIcon />
+          </span>
+        </div>
+        <p className="mt-3 max-w-3xl text-sm text-white/70">{video.description}</p>
+      </div>
+    </>
   );
 }

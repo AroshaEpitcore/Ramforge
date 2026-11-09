@@ -2,6 +2,7 @@
 
 import { VideoPlayer } from "@/components/shared/video-player";
 import { YouTubeEmbed } from "@/components/shared/youtube-embed";
+import { cn } from "@/lib/utils";
 import { useEffect, useState } from "react";
 
 interface PlaybackResponse {
@@ -25,11 +26,13 @@ export function PlaybackPlayer({
   poster,
   title,
   isPreview,
+  fit = "aspect",
 }: {
   videoId: string;
   poster?: string;
   title?: string;
   isPreview?: boolean;
+  fit?: "aspect" | "screen";
 }) {
   const [resolved, setResolved] = useState<Resolved | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -61,13 +64,29 @@ export function PlaybackPlayer({
 
   if (error) {
     return (
-      <div className="flex aspect-video w-full items-center justify-center rounded-xl bg-black px-6 text-center text-sm text-white/80">
+      <div
+        className={cn(
+          "flex items-center justify-center bg-black px-6 text-center text-sm text-white/80",
+          fit === "screen" ? "size-full" : "aspect-video w-full rounded-xl",
+        )}
+      >
         {error}
       </div>
     );
   }
 
   if (resolved?.kind === "youtube") {
+    if (fit === "screen") {
+      return (
+        <div className="flex size-full items-center justify-center">
+          <YouTubeEmbed
+            youtubeId={resolved.youtubeId}
+            title={title}
+            className="max-h-full w-full max-w-[calc(100vh*16/9)]"
+          />
+        </div>
+      );
+    }
     return <YouTubeEmbed youtubeId={resolved.youtubeId} title={title} />;
   }
 
@@ -76,6 +95,7 @@ export function PlaybackPlayer({
       source={{ src: resolved?.kind === "mux" ? resolved.url : undefined, poster }}
       title={title}
       isPreview={isPreview}
+      fit={fit}
     />
   );
 }
