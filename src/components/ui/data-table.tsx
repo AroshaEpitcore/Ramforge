@@ -42,6 +42,8 @@ export interface DataTableProps<TData, TValue> {
   /** Enable the column-visibility menu. */
   enableColumnToggle?: boolean;
   pageSize?: number;
+  /** Button variant for the Previous/Next pagination controls. */
+  paginationVariant?: "outline" | "primary";
   className?: string;
 }
 
@@ -52,6 +54,7 @@ export function DataTable<TData, TValue>({
   enableSearch = true,
   enableColumnToggle = true,
   pageSize = 10,
+  paginationVariant = "outline",
   className,
 }: DataTableProps<TData, TValue>) {
   const [sorting, setSorting] = useState<SortingState>([]);
@@ -93,7 +96,12 @@ export function DataTable<TData, TValue>({
           {enableColumnToggle && (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="outline" size="sm" className="ml-auto" leftIcon={<SlidersHorizontal />}>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="ml-auto"
+                  leftIcon={<SlidersHorizontal />}
+                >
                   Columns
                 </Button>
               </DropdownMenuTrigger>
@@ -166,7 +174,10 @@ export function DataTable<TData, TValue>({
               ))
             ) : (
               <TableRow>
-                <TableCell colSpan={columns.length} className="h-24 text-center text-muted-foreground">
+                <TableCell
+                  colSpan={columns.length}
+                  className="h-24 text-center text-muted-foreground"
+                >
                   No results.
                 </TableCell>
               </TableRow>
@@ -177,14 +188,16 @@ export function DataTable<TData, TValue>({
 
       <div className="flex items-center justify-between gap-4 text-sm text-muted-foreground">
         <span>
-          {selectedCount > 0 ? `${selectedCount} of ${totalCount} selected` : `${totalCount} row(s)`}
+          {selectedCount > 0
+            ? `${selectedCount} of ${totalCount} selected`
+            : `${totalCount} row(s)`}
         </span>
         <div className="flex items-center gap-2">
           <span className="hidden sm:inline">
             Page {table.getState().pagination.pageIndex + 1} of {Math.max(1, table.getPageCount())}
           </span>
           <Button
-            variant="outline"
+            variant={paginationVariant}
             size="sm"
             onClick={() => table.previousPage()}
             disabled={!table.getCanPreviousPage()}
@@ -192,7 +205,7 @@ export function DataTable<TData, TValue>({
             Previous
           </Button>
           <Button
-            variant="outline"
+            variant={paginationVariant}
             size="sm"
             onClick={() => table.nextPage()}
             disabled={!table.getCanNextPage()}

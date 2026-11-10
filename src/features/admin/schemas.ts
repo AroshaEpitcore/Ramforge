@@ -59,6 +59,18 @@ export const videoSchema = z
   });
 export type VideoInput = z.infer<typeof videoSchema>;
 
+export const blogPostSchema = z.object({
+  id: z.string().optional(),
+  title: z.string().trim().min(2, "Enter a title").max(160),
+  slug: z.string().trim().max(80).optional(),
+  excerpt: z.string().trim().min(1, "Enter a short excerpt").max(300),
+  body: z.string().trim().min(1, "Enter the article body").max(50000),
+  coverImageUrl: z.string().trim().url("Enter an image URL").max(500).optional().or(z.literal("")),
+  status,
+  publishAt: z.string().optional(),
+});
+export type BlogPostInput = z.infer<typeof blogPostSchema>;
+
 export const reorderLessonsSchema = z.object({
   courseId: z.string().min(1),
   videoIds: z.array(z.string().min(1)).min(1),

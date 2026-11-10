@@ -104,6 +104,7 @@ model User {
   watchSessions    WatchSession[]
   activityLogs     ActivityLog[]
   uploadedVideos   Video[]        @relation("UploadedVideos")
+  blogPosts        BlogPost[]     @relation("AuthoredPosts")
 
   @@index([role])
 }
@@ -479,4 +480,25 @@ model NewsletterSubscriber {
   source         String?
   unsubscribedAt DateTime?
   createdAt      DateTime  @default(now())
+}
+
+model BlogPost {
+  id            String      @id @default(cuid())
+  title         String
+  slug          String      @unique
+  excerpt       String
+  // Article body (plain text / light markdown); rendered as paragraphs.
+  body          String
+  coverImageUrl String?
+  status        VideoStatus @default(DRAFT)
+  // Scheduled publishing, matching the catalogue rule (see lib/publishing.ts).
+  publishAt     DateTime?
+  publishedAt   DateTime?
+  authorId      String?
+  author        User?       @relation("AuthoredPosts", fields: [authorId], references: [id])
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+
+  @@index([status])
+  @@index([publishedAt])
 }

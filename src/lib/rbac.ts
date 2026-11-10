@@ -19,6 +19,7 @@ export const PERMISSIONS = [
   "coupons:manage",
   "banners:manage",
   "emailTemplates:manage",
+  "blog:manage",
   // Orders & money
   "orders:read",
   "orders:refund",
@@ -64,6 +65,7 @@ export const ROLE_PERMISSIONS: Record<Role, Permission[]> = {
     "coupons:manage",
     "banners:manage",
     "emailTemplates:manage",
+    "blog:manage",
     "orders:read",
     "orders:refund",
     "access:grant",

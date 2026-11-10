@@ -154,6 +154,55 @@ async function main() {
     });
   }
 
+  // Blog posts — a mix of published and a draft, so the public blog and the
+  // admin manager both have something to show.
+  const img = (seed: string) => `https://picsum.photos/seed/${seed}/1280/720`;
+  const blogPosts: Prisma.BlogPostCreateInput[] = [
+    {
+      title: "What's New in Nuke 16?",
+      slug: "whats-new-in-nuke-16",
+      excerpt: "New features, performance improvements and workflow upgrades.",
+      body: "Nuke 16 lands with a faster viewer, GPU-accelerated denoise and a reworked node graph.\n\nIn this post we walk through the headline features and what they mean for day-to-day compositing work.\n\nThe new multi-shot workflow alone is worth the upgrade for anyone working on episodic deliveries.",
+      coverImageUrl: img("blog-nuke16"),
+      status: "PUBLISHED",
+      publishedAt: new Date("2026-10-10"),
+      author: { connect: { id: admin.id } },
+    },
+    {
+      title: "10 Essential Nuke Nodes Every Artist Should Know",
+      slug: "10-essential-nuke-nodes",
+      excerpt: "Build faster, cleaner scripts with these core nodes.",
+      body: "Every compositor leans on a core set of nodes. Master these and most shots become routine.\n\nWe cover Merge, Grade, ShuffleCopy, Roto, STMap and more — with a practical example for each.\n\nBookmark this one; it's the cheat-sheet we wish we'd had starting out.",
+      coverImageUrl: img("blog-nodes"),
+      status: "PUBLISHED",
+      publishedAt: new Date("2026-10-05"),
+      author: { connect: { id: admin.id } },
+    },
+    {
+      title: "Compositing Workflow Tips for Better Results",
+      slug: "compositing-workflow-tips",
+      excerpt: "Small habits that make a big difference to your shots.",
+      body: "Good compositing is mostly good habits.\n\nName your nodes. Keep your script tidy. Work in linear. Check your edges.\n\nThese small disciplines compound into faster, cleaner, more reviewable work.",
+      coverImageUrl: img("blog-workflow"),
+      status: "PUBLISHED",
+      publishedAt: new Date("2026-09-28"),
+      author: { connect: { id: admin.id } },
+    },
+    {
+      title: "Free EXR Practice Footage for Compositing",
+      slug: "free-exr-practice-footage",
+      excerpt: "Download multi-pass EXR plates to practise with.",
+      body: "We've put together a set of multi-pass EXR plates you can use to practise your compositing.\n\nThis article is still a work in progress — check back soon for the download links.",
+      coverImageUrl: img("blog-exr"),
+      status: "DRAFT",
+      author: { connect: { id: admin.id } },
+    },
+  ];
+
+  for (const post of blogPosts) {
+    await db.blogPost.upsert({ where: { slug: post.slug }, update: {}, create: post });
+  }
+
   // Payments off at launch (pricing UI hidden until flipped).
   await db.setting.upsert({
     where: { key: "payments.enabled" },

@@ -14,6 +14,7 @@ import {
   Library,
   Mail,
   MessageSquare,
+  Newspaper,
   Receipt,
   RotateCcw,
   Settings,
@@ -147,6 +148,7 @@ export const adminNav: NavGroup[] = [
   {
     label: "Content",
     items: [
+      { title: "Blog", href: "/admin/blog", icon: Newspaper, permission: "blog:manage" },
       {
         title: "Reviews",
         href: "/admin/reviews",

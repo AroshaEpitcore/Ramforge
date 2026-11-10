@@ -13,8 +13,9 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { PasswordInput } from "@/components/ui/password-input";
+import { isStaff } from "@/lib/rbac";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { signIn } from "next-auth/react";
+import { getSession, signIn } from "next-auth/react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useForm } from "react-hook-form";
@@ -23,7 +24,7 @@ import { toast } from "sonner";
 export function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const callbackUrl = searchParams.get("callbackUrl") || "/account";
+  const callbackUrl = searchParams.get("callbackUrl");
 
   const form = useForm<LoginInput>({
     resolver: zodResolver(loginSchema),
@@ -38,7 +39,14 @@ export function LoginForm() {
       return;
     }
     toast.success("Welcome back");
-    router.push(callbackUrl);
+    // Honour an explicit callbackUrl (e.g. redirected from a guarded page).
+    // Otherwise send staff to the admin panel and customers to their account.
+    let target = callbackUrl;
+    if (!target) {
+      const session = await getSession();
+      target = isStaff(session?.user) ? "/admin" : "/account";
+    }
+    router.push(target);
     router.refresh();
   };
 

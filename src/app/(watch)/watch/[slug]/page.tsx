@@ -27,11 +27,14 @@ export default async function WatchPage({ params }: { params: Promise<{ slug: st
 
   return (
     <div className="mx-auto flex w-full max-w-6xl flex-1 flex-col gap-4 p-4">
-      <PlaybackPlayer
-        videoId={video.id}
-        poster={video.thumbnailUrl || undefined}
-        title={video.title}
-      />
+      {/* Cap the 16:9 player to the viewport height so it always fits the screen. */}
+      <div className="mx-auto w-full max-w-[calc(72vh*16/9)]">
+        <PlaybackPlayer
+          videoId={video.id}
+          poster={video.thumbnailUrl || undefined}
+          title={video.title}
+        />
+      </div>
       <div className="flex flex-wrap items-center gap-3">
         <h1 className="text-xl font-semibold">{video.title}</h1>
         <Badge variant={video.quality === "UHD_4K" ? "4k" : "hd"}>

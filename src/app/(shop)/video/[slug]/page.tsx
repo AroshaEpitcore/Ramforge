@@ -61,8 +61,8 @@ export default async function VideoDetailsPage({ params }: { params: Promise<{ s
   return (
     <Container className="py-8">
       <JsonLd data={videoJsonLd(video)} />
-      {/* Full-width player above the two-column content. */}
-      <div className="mb-8">
+      {/* Player above the two-column content, capped to the viewport height. */}
+      <div className="mx-auto mb-8 w-full max-w-[calc(72vh*16/9)]">
         {isFree && video.source === "YOUTUBE" && video.youtubeId ? (
           <YouTubeEmbed youtubeId={video.youtubeId} title={video.title} />
         ) : isFree ? (

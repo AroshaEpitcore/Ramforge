@@ -12,6 +12,7 @@ import { buildMetadata } from "@/lib/seo";
 import { listStorefrontCategories } from "@/server/queries/categories";
 import { listActiveBanners } from "@/server/queries/marketing";
 import { listPublishedVideos } from "@/server/queries/videos";
+import { getPublishedBlogPosts } from "@/server/queries/blog";
 import { mockBanners, mockBlogPosts, mockBundles } from "@/mocks";
 import type { Metadata } from "next";
 import { Clapperboard, Flame, Layers, Newspaper } from "lucide-react";
@@ -24,13 +25,16 @@ export const metadata: Metadata = buildMetadata({
 });
 
 export default async function HomePage() {
-  const [videos, categories, realBanners] = await Promise.all([
+  const [videos, categories, realBanners, realBlogPosts] = await Promise.all([
     listPublishedVideos(),
     listStorefrontCategories(),
     listActiveBanners(),
+    getPublishedBlogPosts(5),
   ]);
   // Fall back to the sample hero imagery until an admin adds real banners.
   const banners = realBanners.length > 0 ? realBanners : mockBanners.filter((b) => b.active);
+  // Fall back to sample posts until an admin publishes real ones.
+  const blogPosts = realBlogPosts.length > 0 ? realBlogPosts : mockBlogPosts;
   const featured = videos[0];
   const latest = videos.slice(1, 5);
   const newReleases = videos.slice(0, 8);
@@ -87,7 +91,7 @@ export default async function HomePage() {
 
             <div className="flex flex-col gap-3">
               <SectionHeader title="On the blog" icon={<Newspaper />} viewAllHref="/blog" />
-              <BlogList posts={mockBlogPosts} />
+              <BlogList posts={blogPosts} />
             </div>
           </section>
 
