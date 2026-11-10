@@ -61,8 +61,10 @@ export default async function VideoDetailsPage({ params }: { params: Promise<{ s
   return (
     <Container className="py-8">
       <JsonLd data={videoJsonLd(video)} />
-      {/* Player above the two-column content, capped to the viewport height. */}
-      <div className="mx-auto mb-8 w-full max-w-[calc(72vh*16/9)]">
+      {/* Player above the two-column content. Width is capped so the 16:9 frame
+          never gets taller than ~60% of the viewport (minus the sticky navbar),
+          keeping it on-screen without scrolling. dvh handles mobile browser UI. */}
+      <div className="mx-auto mb-8 w-full max-w-[calc(60dvh*16/9)]">
         {isFree && video.source === "YOUTUBE" && video.youtubeId ? (
           <YouTubeEmbed youtubeId={video.youtubeId} title={video.title} />
         ) : isFree ? (

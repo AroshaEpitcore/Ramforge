@@ -84,7 +84,11 @@ export function CoursePlayer({
   return (
     <div className="grid gap-6 lg:grid-cols-[1fr_340px]">
       <div className="min-w-0 space-y-4">
-        <LessonStage lesson={active} owned={owned} playback={playback} />
+        {/* Cap the 16:9 player so it never gets taller than ~60% of the viewport
+            (minus the sticky navbar); dvh accounts for mobile browser chrome. */}
+        <div className="w-full max-w-[calc(60dvh*16/9)]">
+          <LessonStage lesson={active} owned={owned} playback={playback} />
+        </div>
         {active && (
           <div className="space-y-2">
             <div className="flex flex-wrap items-center gap-2">

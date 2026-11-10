@@ -37,7 +37,7 @@ export function CourseWatch({
       {/* Left column: player + meta. flex-1 so it fills the width when the
           sidebar is collapsed. */}
       <div className="min-w-0 flex-1">
-        <div className="mx-auto w-full max-w-[calc(80vh*16/9)] p-4">{children}</div>
+        <div className="mx-auto w-full max-w-[calc(70dvh*16/9)] p-4">{children}</div>
       </div>
 
       {/* Re-open handle, shown only when the sidebar is collapsed. */}
