@@ -1,9 +1,10 @@
 import { Badge } from "@/components/ui/badge";
 import { Duration } from "@/components/ui/duration";
 import { QUALITY_LABELS } from "@/config/constants";
+import { CourseWatch } from "@/features/videos/components/course-watch";
 import { PlaybackPlayer } from "@/features/videos/components/playback-player";
 import { buildMetadata } from "@/lib/seo";
-import { getPublishedVideoBySlug } from "@/server/queries/videos";
+import { getCourseOutlineForVideo, getPublishedVideoBySlug } from "@/server/queries/videos";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 
@@ -25,17 +26,16 @@ export default async function WatchPage({ params }: { params: Promise<{ slug: st
   const video = await getPublishedVideoBySlug(slug);
   if (!video) notFound();
 
-  return (
-    <div className="mx-auto flex w-full max-w-6xl flex-1 flex-col gap-4 p-4">
-      {/* Cap the 16:9 player to the viewport height so it always fits the screen. */}
-      <div className="mx-auto w-full max-w-[calc(72vh*16/9)]">
-        <PlaybackPlayer
-          videoId={video.id}
-          poster={video.thumbnailUrl || undefined}
-          title={video.title}
-        />
-      </div>
-      <div className="flex flex-wrap items-center gap-3">
+  const outline = await getCourseOutlineForVideo(video.id);
+
+  const player = (
+    <>
+      <PlaybackPlayer
+        videoId={video.id}
+        poster={video.thumbnailUrl || undefined}
+        title={video.title}
+      />
+      <div className="mt-4 flex flex-wrap items-center gap-3">
         <h1 className="text-xl font-semibold">{video.title}</h1>
         <Badge variant={video.quality === "UHD_4K" ? "4k" : "hd"}>
           {QUALITY_LABELS[video.quality]}
@@ -44,7 +44,23 @@ export default async function WatchPage({ params }: { params: Promise<{ slug: st
           <Duration seconds={video.durationSec} withIcon />
         </span>
       </div>
-      <p className="max-w-3xl text-sm text-white/70">{video.description}</p>
+      <p className="mt-3 max-w-3xl text-sm text-white/70">{video.description}</p>
+    </>
+  );
+
+  // Course lesson → collapsible sidebar layout; standalone video → centered.
+  if (outline && outline.lessons.length > 0) {
+    return (
+      <CourseWatch outline={outline} currentSlug={slug}>
+        {player}
+      </CourseWatch>
+    );
+  }
+
+  return (
+    <div className="mx-auto flex w-full max-w-6xl flex-1 flex-col gap-0 p-4">
+      {/* Cap the 16:9 player to the viewport height so it always fits the screen. */}
+      <div className="mx-auto w-full max-w-[calc(72vh*16/9)]">{player}</div>
     </div>
   );
 }

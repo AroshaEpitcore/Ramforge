@@ -138,6 +138,56 @@ export async function getPublishedVideoBySlug(slug: string): Promise<Video | nul
   return toVideo(row, agg.get(row.id));
 }
 
+export type CourseLessonLink = {
+  id: string;
+  title: string;
+  slug: string;
+  durationSec: number;
+  accessMode: "FREE" | "PAID" | "MEMBERS";
+};
+
+export type CourseOutline = {
+  id: string;
+  title: string;
+  lessons: CourseLessonLink[];
+};
+
+/**
+ * The course a video belongs to, with its published lessons in order — powers
+ * the "Course content" sidebar on the watch page. Returns null for standalone
+ * videos that aren't part of any course.
+ */
+export async function getCourseOutlineForVideo(videoId: string): Promise<CourseOutline | null> {
+  const row = await db.video.findUnique({
+    where: { id: videoId },
+    select: {
+      course: {
+        select: {
+          id: true,
+          title: true,
+          lessons: {
+            where: publishedWhere(),
+            orderBy: { position: "asc" },
+            select: { id: true, title: true, slug: true, durationSec: true, accessMode: true },
+          },
+        },
+      },
+    },
+  });
+  if (!row?.course) return null;
+  return {
+    id: row.course.id,
+    title: row.course.title,
+    lessons: row.course.lessons.map((l) => ({
+      id: l.id,
+      title: l.title,
+      slug: l.slug,
+      durationSec: l.durationSec,
+      accessMode: l.accessMode,
+    })),
+  };
+}
+
 /** Up to `limit` other published videos in the same category. */
 export async function getRelatedVideos(video: Video, limit = 4): Promise<Video[]> {
   const rows = (await db.video.findMany({
