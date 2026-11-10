@@ -13,7 +13,7 @@ import { CouponField } from "@/features/commerce/components/coupon-field";
 import { formatCurrency } from "@/lib/formatters";
 import { cn } from "@/lib/utils";
 import type { CourseDetail, Lesson } from "@/types";
-import { CheckCircle2, Lock, Play } from "lucide-react";
+import { CheckCircle2, ChevronRight, Lock, PanelRightOpen, Play } from "lucide-react";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
@@ -36,6 +36,7 @@ export function CoursePlayer({
 }) {
   const firstPlayable = course.lessons.find((l) => l.free) ?? course.lessons[0];
   const [activeId, setActiveId] = useState<string | undefined>(firstPlayable?.id);
+  const [sidebarOpen, setSidebarOpen] = useState(true);
   const active = course.lessons.find((l) => l.id === activeId) ?? firstPlayable;
 
   const [playback, setPlayback] = useState<Playback>(null);
@@ -82,11 +83,16 @@ export function CoursePlayer({
   };
 
   return (
-    <div className="grid gap-6 lg:grid-cols-[1fr_340px]">
-      <div className="min-w-0 space-y-4">
-        {/* Cap the 16:9 player so it never gets taller than ~60% of the viewport
-            (minus the sticky navbar); dvh accounts for mobile browser chrome. */}
-        <div className="w-full max-w-[calc(60dvh*16/9)]">
+    <div className="relative flex flex-col gap-6 lg:flex-row lg:items-start">
+      {/* Left: player + lesson details. Player sits flush under the navbar and
+          grows wider (taller) when the sidebar is collapsed. */}
+      <div className="min-w-0 flex-1 space-y-4">
+        <div
+          className={cn(
+            "w-full transition-[max-width] duration-300 ease-in-out",
+            sidebarOpen ? "max-w-[calc(62dvh*16/9)]" : "max-w-[calc(80dvh*16/9)]",
+          )}
+        >
           <LessonStage lesson={active} owned={owned} playback={playback} />
         </div>
         {active && (
@@ -116,9 +122,42 @@ export function CoursePlayer({
         )}
       </div>
 
-      <aside className="lg:sticky lg:top-20 lg:self-start">
-        <Card>
-          <CardContent className="p-0">
+      {/* Re-open handle, shown only when the sidebar is collapsed. */}
+      {!sidebarOpen && (
+        <button
+          type="button"
+          onClick={() => setSidebarOpen(true)}
+          className="fixed top-20 right-0 z-20 flex items-center gap-2 rounded-l-lg border border-r-0 bg-card px-3 py-2 text-sm font-medium shadow-sm hover:bg-accent"
+          aria-label="Show course content"
+        >
+          <PanelRightOpen className="size-4" />
+          <span className="hidden sm:inline">Course content</span>
+        </button>
+      )}
+
+      {/* Right: collapsible "Course content" sidebar. */}
+      <aside
+        className={cn(
+          "shrink-0 transition-[width] duration-300 ease-in-out lg:sticky lg:top-16",
+          sidebarOpen ? "w-full lg:w-[340px]" : "hidden w-0",
+        )}
+      >
+        <Card className="overflow-hidden">
+          <CardContent className="flex max-h-[calc(100dvh-5rem)] flex-col p-0">
+            {/* Header */}
+            <div className="flex items-center justify-between border-b px-4 py-3">
+              <h2 className="text-sm font-semibold">Course content</h2>
+              <button
+                type="button"
+                onClick={() => setSidebarOpen(false)}
+                className="rounded-md p-1 text-muted-foreground hover:bg-accent hover:text-foreground"
+                aria-label="Collapse course content"
+              >
+                <ChevronRight className="size-4" />
+              </button>
+            </div>
+
+            {/* Purchase / ownership status */}
             <div className="space-y-3 border-b p-4">
               <p className="text-sm text-muted-foreground">
                 {course.lessonCount} lessons · {course.freeLessonCount} free
@@ -167,7 +206,8 @@ export function CoursePlayer({
               ) : null}
             </div>
 
-            <ul className="divide-y">
+            {/* Lessons (scrolls independently) */}
+            <ul className="min-h-0 flex-1 divide-y overflow-y-auto">
               {course.lessons.map((lesson, i) => (
                 <li key={lesson.id}>
                   <button
