@@ -59,7 +59,7 @@ export default async function VideoDetailsPage({ params }: { params: Promise<{ s
   const favourited = user ? await isFavourited(user.id, video.id) : false;
 
   return (
-    <Container className="py-8">
+    <Container className="pt-3 pb-8">
       <JsonLd data={videoJsonLd(video)} />
       {/* Player above the two-column content. Width is capped so the 16:9 frame
           never gets taller than ~60% of the viewport (minus the sticky navbar),

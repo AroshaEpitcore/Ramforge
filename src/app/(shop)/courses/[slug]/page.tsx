@@ -35,14 +35,16 @@ export default async function CourseDetailPage({ params }: { params: Promise<{ s
   const owned = user ? await ownsCourse(user.id, course.id) : false;
 
   return (
-    <Container className="py-8">
+    <Container className="pt-3 pb-10">
       <JsonLd data={courseJsonLd(course)} />
-      <div className="mb-6 space-y-2">
-        {course.category && <Badge variant="secondary">{course.category.name}</Badge>}
-        <h1 className="text-3xl font-semibold tracking-tight">{course.title}</h1>
-        <p className="max-w-3xl text-muted-foreground">{course.description}</p>
-      </div>
+      {/* Player sits directly under the navbar (no heading above it). The course
+          title and description move below, like a Udemy-style course viewer. */}
       <CoursePlayer course={course} paymentsEnabled={paymentsEnabled} owned={owned} />
+      <div className="mt-8 max-w-3xl space-y-2">
+        {course.category && <Badge variant="secondary">{course.category.name}</Badge>}
+        <h1 className="text-2xl font-semibold tracking-tight">{course.title}</h1>
+        <p className="text-muted-foreground">{course.description}</p>
+      </div>
     </Container>
   );
 }
