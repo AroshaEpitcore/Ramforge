@@ -11,6 +11,7 @@ import {
 } from "@/features/admin/schemas";
 import { ForbiddenError, requirePermission, type Permission } from "@/lib/rbac";
 import { slugify } from "@/lib/slug";
+import { extractYouTubeId } from "@/lib/youtube";
 import { db } from "@/server/db";
 import {
   getCourseLessons,
@@ -284,6 +285,16 @@ export async function saveVideo(raw: unknown): Promise<ActionResult<{ id: string
     const slug = slugify(d.slug || d.title);
     const publishedNow = d.status === "PUBLISHED";
     const courseId = nullify(d.courseId);
+    // Accept a full YouTube link or a bare id; store the clean 11-char id.
+    let youtubeId: string | null = null;
+    if (d.source === "YOUTUBE") {
+      youtubeId = extractYouTubeId(d.youtubeId ?? "");
+      if (!youtubeId) {
+        return fail("Enter a valid YouTube link or video id.", {
+          youtubeId: ["Paste a YouTube link (or the 11-character id)."],
+        });
+      }
+    }
     const data = {
       title: d.title,
       slug,
@@ -292,7 +303,7 @@ export async function saveVideo(raw: unknown): Promise<ActionResult<{ id: string
       courseId,
       position: courseId ? d.position : 0,
       source: d.source,
-      youtubeId: d.source === "YOUTUBE" ? nullify(d.youtubeId) : null,
+      youtubeId,
       fullAssetId: d.source === "MUX" ? nullify(d.fullAssetId) : null,
       accessMode: d.accessMode,
       price: d.accessMode === "PAID" ? toMinor(d.priceMajor) : 0,

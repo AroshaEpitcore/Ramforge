@@ -363,8 +363,15 @@ function VideoFormDialog({
             </div>
             {source === "YOUTUBE" ? (
               <div className="grid gap-2">
-                <Label htmlFor="v-yt">YouTube video id</Label>
-                <Input id="v-yt" placeholder="dQw4w9WgXcQ" {...register("youtubeId")} />
+                <Label htmlFor="v-yt">YouTube link or video id</Label>
+                <Input
+                  id="v-yt"
+                  placeholder="https://youtu.be/dQw4w9WgXcQ"
+                  {...register("youtubeId")}
+                />
+                <p className="text-xs text-muted-foreground">
+                  Paste the video link (or the 11-character id) — we&apos;ll sort out the rest.
+                </p>
                 {errors.youtubeId && (
                   <p className="text-xs text-destructive">{errors.youtubeId.message}</p>
                 )}

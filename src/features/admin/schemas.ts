@@ -42,7 +42,8 @@ export const videoSchema = z
     courseId: z.string().optional(),
     position: z.number().int().min(0).max(999),
     source: z.enum(["YOUTUBE", "MUX"]),
-    youtubeId: z.string().trim().max(32).optional(),
+    // Accepts a bare id or a full YouTube link; the action extracts the id.
+    youtubeId: z.string().trim().max(200).optional(),
     fullAssetId: z.string().trim().max(200).optional(),
     accessMode: z.enum(["FREE", "PAID"]),
     priceMajor: z.number().min(0).max(100000),
