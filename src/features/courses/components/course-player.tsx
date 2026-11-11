@@ -87,11 +87,11 @@ export function CoursePlayer({
       {/* Left: player + lesson details. Player sits flush under the navbar and
           grows wider (taller) when the sidebar is collapsed. */}
       <div className="min-w-0 flex-1 space-y-4">
-        {/* Fill the available space: the 16:9 frame grows to fill the column
-            width, capped so its height never exceeds the viewport below the
-            navbar (100dvh - navbar - a little breathing room). Collapsing the
-            sidebar widens the column, so the player naturally gets bigger. */}
-        <div className="w-full max-w-[calc((100dvh_-_6rem)*16/9)]">
+        {/* Sidebar open: cap the 16:9 frame's height to the viewport below the
+            navbar so it fills the column without scrolling. Sidebar collapsed:
+            drop the cap so the player goes true full width (taller than the
+            screen is expected). */}
+        <div className={cn("w-full", sidebarOpen && "max-w-[calc((100dvh_-_6rem)*16/9)]")}>
           <LessonStage lesson={active} owned={owned} playback={playback} />
         </div>
         {active && (
