@@ -57,7 +57,7 @@ export function CourseWatch({
       <aside
         className={cn(
           "shrink-0 border-white/10 bg-white/[0.03] transition-[width] duration-300 ease-in-out",
-          "lg:h-[calc(100dvh-3.5rem)] lg:overflow-hidden lg:border-l",
+          "lg:h-[calc(100dvh_-_3.5rem)] lg:overflow-hidden lg:border-l",
           open ? "w-full lg:w-[360px]" : "w-full lg:w-0 lg:border-l-0",
           !open && "hidden lg:block",
         )}

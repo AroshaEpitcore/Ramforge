@@ -61,28 +61,28 @@ export default async function VideoDetailsPage({ params }: { params: Promise<{ s
   return (
     <Container className="pt-3 pb-8">
       <JsonLd data={videoJsonLd(video)} />
-      {/* Player above the two-column content. Width is capped so the 16:9 frame
-          never gets taller than ~60% of the viewport (minus the sticky navbar),
-          keeping it on-screen without scrolling. dvh handles mobile browser UI. */}
-      <div className="mx-auto mb-8 w-full max-w-[calc(60dvh*16/9)]">
-        {isFree && video.source === "YOUTUBE" && video.youtubeId ? (
-          <YouTubeEmbed youtubeId={video.youtubeId} title={video.title} />
-        ) : isFree ? (
-          <PlaybackPlayer
-            videoId={video.id}
-            poster={video.thumbnailUrl || undefined}
-            title={video.title}
-          />
-        ) : (
-          <VideoPlayer
-            source={{ poster: video.thumbnailUrl || undefined }}
-            title={video.title}
-            isPreview
-          />
-        )}
-      </div>
-      <div className="grid gap-8 lg:grid-cols-[1fr_360px]">
+      <div className="grid gap-8 lg:grid-cols-[1fr_360px] lg:items-start">
         <div className="min-w-0 space-y-6">
+          {/* Player on the left, beside the access sidebar — same layout as the
+              course page. The 16:9 frame fills the column width, capped so its
+              height never exceeds the viewport below the navbar. */}
+          <div className="w-full max-w-[calc((100dvh_-_6rem)*16/9)]">
+            {isFree && video.source === "YOUTUBE" && video.youtubeId ? (
+              <YouTubeEmbed youtubeId={video.youtubeId} title={video.title} />
+            ) : isFree ? (
+              <PlaybackPlayer
+                videoId={video.id}
+                poster={video.thumbnailUrl || undefined}
+                title={video.title}
+              />
+            ) : (
+              <VideoPlayer
+                source={{ poster: video.thumbnailUrl || undefined }}
+                title={video.title}
+                isPreview
+              />
+            )}
+          </div>
           <div className="space-y-3">
             <div className="flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
               <Badge variant="secondary">{video.category.name}</Badge>
@@ -152,7 +152,7 @@ export default async function VideoDetailsPage({ params }: { params: Promise<{ s
           </section>
         </div>
 
-        <div className="space-y-3 lg:min-w-0">
+        <aside className="space-y-3 lg:sticky lg:top-16 lg:min-w-0">
           <VideoAccessBox
             videoId={video.id}
             price={video.salePrice ?? video.price}
@@ -169,7 +169,7 @@ export default async function VideoDetailsPage({ params }: { params: Promise<{ s
             signedIn={Boolean(user)}
             withLabel
           />
-        </div>
+        </aside>
       </div>
 
       {related.length > 0 && (

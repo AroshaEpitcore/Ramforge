@@ -87,12 +87,11 @@ export function CoursePlayer({
       {/* Left: player + lesson details. Player sits flush under the navbar and
           grows wider (taller) when the sidebar is collapsed. */}
       <div className="min-w-0 flex-1 space-y-4">
-        <div
-          className={cn(
-            "w-full transition-[max-width] duration-300 ease-in-out",
-            sidebarOpen ? "max-w-[calc(62dvh*16/9)]" : "max-w-[calc(80dvh*16/9)]",
-          )}
-        >
+        {/* Fill the available space: the 16:9 frame grows to fill the column
+            width, capped so its height never exceeds the viewport below the
+            navbar (100dvh - navbar - a little breathing room). Collapsing the
+            sidebar widens the column, so the player naturally gets bigger. */}
+        <div className="w-full max-w-[calc((100dvh_-_6rem)*16/9)]">
           <LessonStage lesson={active} owned={owned} playback={playback} />
         </div>
         {active && (
@@ -143,7 +142,7 @@ export function CoursePlayer({
         )}
       >
         <Card className="overflow-hidden">
-          <CardContent className="flex max-h-[calc(100dvh-5rem)] flex-col p-0">
+          <CardContent className="flex max-h-[calc(100dvh_-_5rem)] flex-col p-0">
             {/* Header */}
             <div className="flex items-center justify-between border-b px-4 py-3">
               <h2 className="text-sm font-semibold">Course content</h2>
