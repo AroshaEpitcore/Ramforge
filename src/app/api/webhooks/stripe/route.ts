@@ -38,6 +38,25 @@ export async function POST(req: NextRequest) {
     if (event.type === "checkout.session.completed") {
       const session = event.data.object;
       const orderId = session.metadata?.orderId;
+      const donationId = session.metadata?.donationId;
+      if (donationId) {
+        // "Buy us a coffee" tip — flip the Donation to PAID (no access to grant).
+        const donation = await db.donation.findUnique({
+          where: { id: donationId },
+          select: { id: true, status: true },
+        });
+        if (donation && donation.status !== "PAID") {
+          await db.donation.update({
+            where: { id: donation.id },
+            data: {
+              status: "PAID",
+              paidAt: new Date(),
+              stripePaymentIntentId:
+                typeof session.payment_intent === "string" ? session.payment_intent : null,
+            },
+          });
+        }
+      }
       if (orderId) {
         const order = await db.order.findUnique({
           where: { id: orderId },

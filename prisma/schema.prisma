@@ -504,6 +504,30 @@ model NewsletterSubscriber {
   createdAt      DateTime  @default(now())
 }
 
+enum DonationStatus {
+  PENDING
+  PAID
+}
+
+/// A one-off "buy us a coffee" tip. Supporters need no account; the optional
+/// name + message power the public supporters wall. Marked PAID by the Stripe
+/// webhook on checkout.session.completed.
+model Donation {
+  id                    String         @id @default(cuid())
+  // Amount in minor units.
+  amount                Int
+  currency              String         @default("USD")
+  supporterName         String?
+  message               String?
+  status                DonationStatus @default(PENDING)
+  stripeCheckoutId      String?
+  stripePaymentIntentId String?
+  createdAt             DateTime       @default(now())
+  paidAt                DateTime?
+
+  @@index([status])
+}
+
 model BlogPost {
   id            String      @id @default(cuid())
   title         String

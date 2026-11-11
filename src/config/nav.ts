@@ -70,6 +70,7 @@ export const footerNav: NavGroup[] = [
       { title: "Contact", href: "/contact" },
       { title: "Blog", href: "/blog" },
       { title: "FAQ", href: "/faq" },
+      { title: "Support us", href: "/support" },
     ],
   },
   {
