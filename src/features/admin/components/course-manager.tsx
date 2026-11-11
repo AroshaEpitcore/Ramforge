@@ -33,12 +33,13 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 import { deleteCourse, saveCourse } from "@/features/admin/actions";
 import { LessonReorderDialog } from "@/features/admin/components/lesson-reorder-dialog";
+import { SectionManagerDialog } from "@/features/admin/components/section-manager-dialog";
 import { courseSchema, type CourseInput } from "@/features/admin/schemas";
 import { formatCurrency } from "@/lib/formatters";
 import type { AdminCourseRow } from "@/server/queries/admin";
 import { zodResolver } from "@hookform/resolvers/zod";
 import type { ColumnDef } from "@tanstack/react-table";
-import { ListOrdered, Pencil, Plus, Trash2 } from "lucide-react";
+import { Layers, ListOrdered, Pencil, Plus, Trash2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { Controller, useForm } from "react-hook-form";
@@ -59,6 +60,7 @@ export function CourseManager({
   const [editing, setEditing] = useState<AdminCourseRow | null>(null);
   const [deleting, setDeleting] = useState<AdminCourseRow | null>(null);
   const [reordering, setReordering] = useState<AdminCourseRow | null>(null);
+  const [managingSections, setManagingSections] = useState<AdminCourseRow | null>(null);
 
   const onDelete = async () => {
     if (!deleting) return;
@@ -100,6 +102,15 @@ export function CourseManager({
       enableHiding: false,
       cell: ({ row }) => (
         <div className="flex justify-end gap-1">
+          <Button
+            variant="ghost"
+            size="icon"
+            className="size-8"
+            aria-label="Manage sections"
+            onClick={() => setManagingSections(row.original)}
+          >
+            <Layers className="size-4" />
+          </Button>
           <Button
             variant="ghost"
             size="icon"
@@ -167,6 +178,13 @@ export function CourseManager({
         courseTitle={reordering?.title ?? ""}
         open={!!reordering}
         onOpenChange={(o) => !o && setReordering(null)}
+      />
+
+      <SectionManagerDialog
+        courseId={managingSections?.id ?? null}
+        courseTitle={managingSections?.title ?? ""}
+        open={!!managingSections}
+        onOpenChange={(o) => !o && setManagingSections(null)}
       />
 
       <AlertDialog open={!!deleting} onOpenChange={(o) => !o && setDeleting(null)}>

@@ -183,11 +183,29 @@ model Course {
   updatedAt DateTime  @updatedAt
 
   lessons    Video[]
+  sections   Section[]
   purchases  Purchase[]
   orderItems OrderItem[]
 
   @@index([categoryId])
   @@index([status])
+}
+
+/// An optional grouping of a course's lessons (e.g. "Module 1: Getting
+/// Started"). Lessons keep their course-wide `position`; a Section just groups
+/// them for display, ordered by the section's own `position`.
+model Section {
+  id        String   @id @default(cuid())
+  courseId  String
+  course    Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  title     String
+  position  Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  lessons Video[]
+
+  @@index([courseId])
 }
 
 model Video {
@@ -202,6 +220,9 @@ model Video {
   courseId       String?
   course         Course?      @relation(fields: [courseId], references: [id])
   position       Int          @default(0)
+  // Optional section grouping within the course (null = ungrouped).
+  sectionId      String?
+  section        Section?     @relation(fields: [sectionId], references: [id], onDelete: SetNull)
   thumbnailUrl   String?
   // Hosting: YOUTUBE free embeds vs MUX signed assets.
   source         VideoSource  @default(MUX)
@@ -246,6 +267,7 @@ model Video {
   @@unique([courseId, position])
   @@index([categoryId])
   @@index([courseId])
+  @@index([sectionId])
   @@index([status])
 }
 

@@ -77,6 +77,25 @@ export const reorderLessonsSchema = z.object({
 });
 export type ReorderLessonsInput = z.infer<typeof reorderLessonsSchema>;
 
+export const sectionSchema = z.object({
+  id: z.string().optional(),
+  courseId: z.string().min(1),
+  title: z.string().trim().min(1, "Enter a title").max(120),
+});
+export type SectionInput = z.infer<typeof sectionSchema>;
+
+export const reorderSectionsSchema = z.object({
+  courseId: z.string().min(1),
+  sectionIds: z.array(z.string().min(1)).min(1),
+});
+export type ReorderSectionsInput = z.infer<typeof reorderSectionsSchema>;
+
+export const assignLessonSectionSchema = z.object({
+  lessonId: z.string().min(1),
+  sectionId: z.string().min(1).nullable(),
+});
+export type AssignLessonSectionInput = z.infer<typeof assignLessonSectionSchema>;
+
 export const bundleSchema = z.object({
   id: z.string().optional(),
   title: z.string().trim().min(2, "Enter a title").max(120),

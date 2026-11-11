@@ -2,7 +2,7 @@ import "server-only";
 
 import { isPublished } from "@/lib/publishing";
 import { db } from "@/server/db";
-import type { CourseDetail, CourseSummary, Lesson, VideoSource } from "@/types";
+import type { CourseDetail, CourseSectionGroup, CourseSummary, Lesson, VideoSource } from "@/types";
 
 /** Prisma `where` fragment: publicly visible (published + schedule passed). */
 function publishedWhere(now = new Date()) {
@@ -22,6 +22,7 @@ type LessonRow = {
   source: VideoSource;
   youtubeId: string | null;
   notes: string | null;
+  sectionId: string | null;
 };
 
 function toLesson(v: LessonRow): Lesson {
@@ -36,7 +37,31 @@ function toLesson(v: LessonRow): Lesson {
     source: v.source,
     youtubeId: v.youtubeId,
     notes: v.notes,
+    sectionId: v.sectionId,
   };
+}
+
+/**
+ * Group ordered lessons into their sections (ordered by the section's own
+ * position). Lessons without a section fall into a trailing "ungrouped" bucket.
+ * Empty sections are omitted; the ungrouped bucket only appears if it has
+ * lessons AND at least one real section exists (otherwise callers use the flat
+ * list).
+ */
+function groupLessonsBySection(
+  lessons: Lesson[],
+  sections: { id: string; title: string }[],
+): CourseSectionGroup[] {
+  const groups: CourseSectionGroup[] = [];
+  for (const s of sections) {
+    const inSection = lessons.filter((l) => l.sectionId === s.id);
+    if (inSection.length > 0) groups.push({ id: s.id, title: s.title, lessons: inSection });
+  }
+  const ungrouped = lessons.filter((l) => !l.sectionId);
+  if (ungrouped.length > 0) {
+    groups.push({ id: null, title: groups.length > 0 ? "More lessons" : null, lessons: ungrouped });
+  }
+  return groups;
 }
 
 /** Published courses for the storefront listing. */
@@ -72,6 +97,7 @@ export async function getCourseBySlug(slug: string): Promise<CourseDetail | null
     where: { slug },
     include: {
       category: { select: { id: true, name: true, slug: true } },
+      sections: { orderBy: { position: "asc" }, select: { id: true, title: true } },
       lessons: {
         where: publishedWhere(now),
         orderBy: { position: "asc" },
@@ -85,6 +111,7 @@ export async function getCourseBySlug(slug: string): Promise<CourseDetail | null
           source: true,
           youtubeId: true,
           notes: true,
+          sectionId: true,
         },
       },
     },
@@ -105,6 +132,7 @@ export async function getCourseBySlug(slug: string): Promise<CourseDetail | null
     lessonCount: lessons.length,
     freeLessonCount: lessons.filter((l) => l.free).length,
     lessons,
+    sections: groupLessonsBySection(lessons, course.sections),
   };
 }
 

@@ -2,6 +2,12 @@
 
 import { YouTubeEmbed } from "@/components/shared/youtube-embed";
 import { VideoPlayer } from "@/components/shared/video-player";
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -46,6 +52,40 @@ export function CoursePlayer({
   const [finalPrice, setFinalPrice] = useState<number | null>(null);
 
   const price = course.salePrice ?? course.price;
+
+  // Sidebar grouping. `course.sections` already buckets lessons (ungrouped
+  // bucket has id null); show accordions only when a real section exists.
+  const hasSections = course.sections.some((g) => g.id !== null);
+  const lessonNumber = new Map(course.lessons.map((l, i) => [l.id, i + 1]));
+  const activeGroup = course.sections.find((g) => g.lessons.some((l) => l.id === active?.id));
+  const groupValue = (g: { id: string | null }) => g.id ?? "__ungrouped__";
+  const sectionMeta = (lessons: Lesson[]) => {
+    const mins = Math.round(lessons.reduce((s, l) => s + l.durationSec, 0) / 60);
+    return `${lessons.length} ${lessons.length === 1 ? "lesson" : "lessons"} · ${mins} min`;
+  };
+
+  const renderLesson = (lesson: Lesson) => (
+    <li key={lesson.id}>
+      <button
+        type="button"
+        onClick={() => setActiveId(lesson.id)}
+        className={cn(
+          "flex w-full items-center gap-3 p-3 text-left text-sm transition-colors hover:bg-accent/50",
+          lesson.id === active?.id && "bg-accent/60",
+        )}
+      >
+        <span className="flex size-6 shrink-0 items-center justify-center rounded-full border text-xs tabular-nums">
+          {lessonNumber.get(lesson.id)}
+        </span>
+        <span className="min-w-0 flex-1 truncate">{lesson.title}</span>
+        {lesson.free || owned ? (
+          <Play className="size-4 shrink-0 text-success" />
+        ) : (
+          <Lock className="size-4 shrink-0 text-muted-foreground" />
+        )}
+      </button>
+    </li>
+  );
 
   // For a paid, owned lesson, fetch a signed playback source.
   useEffect(() => {
@@ -205,31 +245,41 @@ export function CoursePlayer({
               ) : null}
             </div>
 
-            {/* Lessons (scrolls independently) */}
-            <ul className="min-h-0 flex-1 divide-y overflow-y-auto">
-              {course.lessons.map((lesson, i) => (
-                <li key={lesson.id}>
-                  <button
-                    type="button"
-                    onClick={() => setActiveId(lesson.id)}
-                    className={cn(
-                      "flex w-full items-center gap-3 p-3 text-left text-sm transition-colors hover:bg-accent/50",
-                      lesson.id === active?.id && "bg-accent/60",
-                    )}
+            {/* Lessons (scrolls independently). Grouped into collapsible
+                sections when the course defines any; otherwise a flat list. */}
+            {hasSections ? (
+              <Accordion
+                type="multiple"
+                defaultValue={[groupValue(activeGroup ?? course.sections[0])]}
+                className="min-h-0 flex-1 overflow-y-auto"
+              >
+                {course.sections.map((group) => (
+                  <AccordionItem
+                    key={groupValue(group)}
+                    value={groupValue(group)}
+                    className="border-t border-b-0 first:border-t-0"
                   >
-                    <span className="flex size-6 shrink-0 items-center justify-center rounded-full border text-xs tabular-nums">
-                      {i + 1}
-                    </span>
-                    <span className="min-w-0 flex-1 truncate">{lesson.title}</span>
-                    {lesson.free || owned ? (
-                      <Play className="size-4 shrink-0 text-success" />
-                    ) : (
-                      <Lock className="size-4 shrink-0 text-muted-foreground" />
-                    )}
-                  </button>
-                </li>
-              ))}
-            </ul>
+                    <AccordionTrigger className="px-3 hover:no-underline">
+                      <span className="min-w-0">
+                        <span className="block truncate font-semibold">
+                          {group.title ?? "Lessons"}
+                        </span>
+                        <span className="mt-0.5 block text-xs font-normal text-muted-foreground">
+                          {sectionMeta(group.lessons)}
+                        </span>
+                      </span>
+                    </AccordionTrigger>
+                    <AccordionContent className="pb-0">
+                      <ul className="divide-y border-t">{group.lessons.map(renderLesson)}</ul>
+                    </AccordionContent>
+                  </AccordionItem>
+                ))}
+              </Accordion>
+            ) : (
+              <ul className="min-h-0 flex-1 divide-y overflow-y-auto">
+                {course.lessons.map(renderLesson)}
+              </ul>
+            )}
           </CardContent>
         </Card>
       </aside>

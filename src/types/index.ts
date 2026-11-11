@@ -104,6 +104,17 @@ export interface Lesson {
   source: VideoSource;
   youtubeId?: string | null;
   notes?: string | null;
+  /** Section grouping within the course (null = ungrouped). */
+  sectionId?: string | null;
+}
+
+/** A group of a course's lessons under an optional section heading. */
+export interface CourseSectionGroup {
+  /** Section id, or null for the ungrouped lessons bucket. */
+  id: string | null;
+  /** Section title, or null for the ungrouped lessons bucket. */
+  title: string | null;
+  lessons: Lesson[];
 }
 
 /** Course card/listing view model. */
@@ -121,9 +132,12 @@ export interface CourseSummary {
   freeLessonCount: number;
 }
 
-/** Course detail view model with ordered lessons. */
+/** Course detail view model with ordered lessons, grouped into sections. */
 export interface CourseDetail extends CourseSummary {
+  /** Flat, ordered list of every lesson (section-agnostic). */
   lessons: Lesson[];
+  /** Lessons grouped by section (ungrouped bucket last, if any). */
+  sections: CourseSectionGroup[];
 }
 
 export interface Bundle {

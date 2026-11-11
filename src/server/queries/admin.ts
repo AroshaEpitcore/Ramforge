@@ -163,6 +163,28 @@ export async function getCourseLessons(
   });
 }
 
+export interface CourseSectionsData {
+  sections: { id: string; title: string; position: number }[];
+  lessons: { id: string; title: string; position: number; sectionId: string | null }[];
+}
+
+/** A course's sections + lessons (with their section), for the section manager. */
+export async function getCourseSectionsData(courseId: string): Promise<CourseSectionsData> {
+  const [sections, lessons] = await Promise.all([
+    db.section.findMany({
+      where: { courseId },
+      orderBy: { position: "asc" },
+      select: { id: true, title: true, position: true },
+    }),
+    db.video.findMany({
+      where: { courseId },
+      orderBy: { position: "asc" },
+      select: { id: true, title: true, position: true, sectionId: true },
+    }),
+  ]);
+  return { sections, lessons };
+}
+
 /** Single records for edit forms (serialisable projections). */
 export async function getCategoryForEdit(id: string) {
   return db.category.findUnique({

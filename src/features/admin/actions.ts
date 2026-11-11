@@ -1,15 +1,22 @@
 "use server";
 
 import {
+  assignLessonSectionSchema,
   categorySchema,
   courseSchema,
   reorderLessonsSchema,
+  reorderSectionsSchema,
+  sectionSchema,
   videoSchema,
 } from "@/features/admin/schemas";
 import { ForbiddenError, requirePermission, type Permission } from "@/lib/rbac";
 import { slugify } from "@/lib/slug";
 import { db } from "@/server/db";
-import { getCourseLessons } from "@/server/queries/admin";
+import {
+  getCourseLessons,
+  getCourseSectionsData,
+  type CourseSectionsData,
+} from "@/server/queries/admin";
 import { requireCurrentUser } from "@/server/current-user";
 import { SETTING_KEYS, setSetting } from "@/server/services/settings";
 import type { ActionResult, SessionUser } from "@/types";
@@ -172,6 +179,94 @@ export async function reorderLessons(raw: unknown): Promise<ActionResult> {
       ),
     ]);
     revalidatePath("/admin/courses");
+    return { ok: true, data: undefined };
+  } catch (e) {
+    return handleError(e);
+  }
+}
+
+// --- Course sections -------------------------------------------------------
+
+export async function loadCourseSections(
+  courseId: string,
+): Promise<ActionResult<CourseSectionsData>> {
+  try {
+    await authorize("videos:read");
+    return { ok: true, data: await getCourseSectionsData(courseId) };
+  } catch (e) {
+    return handleError(e);
+  }
+}
+
+/** Create a new section (appended) or rename an existing one. */
+export async function saveSection(raw: unknown): Promise<ActionResult<{ id: string }>> {
+  const parsed = sectionSchema.safeParse(raw);
+  if (!parsed.success) return zerr(parsed.error);
+  const d = parsed.data;
+  try {
+    await authorize(d.id ? "videos:update" : "videos:create");
+    if (d.id) {
+      const row = await db.section.update({ where: { id: d.id }, data: { title: d.title } });
+      revalidatePath("/admin/courses");
+      revalidatePath("/courses");
+      return { ok: true, data: { id: row.id } };
+    }
+    const count = await db.section.count({ where: { courseId: d.courseId } });
+    const row = await db.section.create({
+      data: { courseId: d.courseId, title: d.title, position: count },
+    });
+    revalidatePath("/admin/courses");
+    revalidatePath("/courses");
+    return { ok: true, data: { id: row.id } };
+  } catch (e) {
+    return handleError(e);
+  }
+}
+
+/** Delete a section; its lessons stay in the course (sectionId set to null). */
+export async function deleteSection(id: string): Promise<ActionResult> {
+  try {
+    await authorize("videos:delete");
+    await db.section.delete({ where: { id } });
+    revalidatePath("/admin/courses");
+    revalidatePath("/courses");
+    return { ok: true, data: undefined };
+  } catch (e) {
+    return handleError(e);
+  }
+}
+
+export async function reorderSections(raw: unknown): Promise<ActionResult> {
+  const parsed = reorderSectionsSchema.safeParse(raw);
+  if (!parsed.success) return zerr(parsed.error);
+  const { courseId, sectionIds } = parsed.data;
+  try {
+    await authorize("videos:update");
+    // Sections have no unique (courseId, position) constraint, so a single pass
+    // is safe. Scope each update to the course as defence.
+    await db.$transaction(
+      sectionIds.map((id, i) =>
+        db.section.update({ where: { id, courseId }, data: { position: i } }),
+      ),
+    );
+    revalidatePath("/admin/courses");
+    revalidatePath("/courses");
+    return { ok: true, data: undefined };
+  } catch (e) {
+    return handleError(e);
+  }
+}
+
+/** Move a lesson into a section (or out of all sections when sectionId null). */
+export async function assignLessonSection(raw: unknown): Promise<ActionResult> {
+  const parsed = assignLessonSectionSchema.safeParse(raw);
+  if (!parsed.success) return zerr(parsed.error);
+  const { lessonId, sectionId } = parsed.data;
+  try {
+    await authorize("videos:update");
+    await db.video.update({ where: { id: lessonId }, data: { sectionId } });
+    revalidatePath("/admin/courses");
+    revalidatePath("/courses");
     return { ok: true, data: undefined };
   } catch (e) {
     return handleError(e);
