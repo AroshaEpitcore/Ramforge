@@ -58,7 +58,7 @@ Which hosting the app uses for self‑hosted/paid video is controlled by the
 
 ### What happens behind the scenes
 
-```
+```text
  You click "Upload to Mux"
         │
         ▼

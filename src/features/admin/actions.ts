@@ -317,6 +317,12 @@ export async function saveVideo(raw: unknown): Promise<ActionResult<{ id: string
       notes: nullify(d.notes),
       publishedAt: publishedNow ? new Date() : null,
     };
+    // The Mux webhook owns fullAssetId (the playback id). When editing a MUX
+    // video without entering a new id, don't let a stale/empty form value wipe
+    // the webhook-set value — otherwise playback breaks ("still processing").
+    if (d.id && d.source === "MUX" && !data.fullAssetId) {
+      delete (data as { fullAssetId?: string | null }).fullAssetId;
+    }
     const row = d.id
       ? await db.video.update({ where: { id: d.id }, data })
       : await db.video.create({ data: { ...data, uploadedById: user.id } });
