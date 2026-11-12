@@ -24,7 +24,7 @@ export function DonateCard({
   headline = ["Learned", "something", "valuable?"],
   body = "If this website helped you learn something valuable, you can show your support with a contribution — every bit keeps new tutorials coming.",
   ctaLabel = "Donate",
-  href = "/donate",
+  href = "/support",
   className,
 }: DonateCardProps) {
   const [line1, line2, highlight] = headline;

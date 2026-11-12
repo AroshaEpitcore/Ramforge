@@ -53,7 +53,7 @@ export default async function HomePage() {
           {/* Hero + promo */}
           <section className="grid gap-4 lg:grid-cols-[1fr_320px]">
             <HeroCarousel banners={banners} />
-            <DonateCard href="/donate" className="hidden lg:flex" />
+            <DonateCard href="/support" className="hidden lg:flex" />
           </section>
 
           {/* Category chips (mobile + quick browse) */}
