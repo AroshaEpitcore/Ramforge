@@ -56,6 +56,8 @@ export function MuxUploadPanel({ categories }: { categories: { id: string; name:
       fullAssetId: "",
       accessMode: "PAID",
       priceMajor: 0,
+      rentalDays: 0,
+      rentalPriceMajor: 0,
       status: "DRAFT",
       publishAt: "",
       notes: "",
