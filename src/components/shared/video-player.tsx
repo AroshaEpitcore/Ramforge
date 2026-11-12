@@ -39,22 +39,28 @@ export function VideoPlayer({ source, title, className, isPreview }: VideoPlayer
     const src = source.src;
     const isHls = src.includes(".m3u8");
 
-    if (!isHls || el.canPlayType("application/vnd.apple.mpegurl")) {
+    // Non-HLS (e.g. MP4) plays natively.
+    if (!isHls) {
       el.src = src;
       return;
     }
 
+    // HLS: prefer hls.js wherever it's supported (Chrome/Firefox/Edge). Only fall
+    // back to the browser's native HLS when hls.js is unavailable (Safari/iOS).
+    // NB: Chrome's canPlayType() can return a truthy "maybe" for HLS yet fail to
+    // play it, so we must NOT gate on canPlayType before trying hls.js.
     let destroy: (() => void) | undefined;
     let cancelled = false;
     void import("hls.js").then(({ default: Hls }) => {
-      if (cancelled || !videoRef.current) return;
+      const video = videoRef.current;
+      if (cancelled || !video) return;
       if (Hls.isSupported()) {
         const hls = new Hls();
         hls.loadSource(src);
-        hls.attachMedia(videoRef.current);
+        hls.attachMedia(video);
         destroy = () => hls.destroy();
-      } else {
-        videoRef.current.src = src;
+      } else if (video.canPlayType("application/vnd.apple.mpegurl")) {
+        video.src = src;
       }
     });
     return () => {
