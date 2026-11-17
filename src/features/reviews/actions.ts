@@ -13,8 +13,9 @@ function fail(error: string, fieldErrors?: Record<string, string[]>): ActionResu
 }
 
 /**
- * Submit (or update) a review for a video. New/edited reviews are unapproved
- * until a moderator approves them, so they don't appear publicly immediately.
+ * Submit (or update) a review for a video. Reviews publish immediately (no
+ * moderation queue — like YouTube comments); staff can still remove abusive
+ * ones from Admin → Reviews.
  */
 export async function submitReview(raw: unknown): Promise<ActionResult> {
   const parsed = reviewSchema.safeParse(raw);
@@ -42,8 +43,8 @@ export async function submitReview(raw: unknown): Promise<ActionResult> {
 
     await db.review.upsert({
       where: { videoId_userId: { videoId, userId } },
-      update: { rating, title: title ?? null, body, approved: false },
-      create: { videoId, userId, rating, title: title ?? null, body, approved: false },
+      update: { rating, title: title ?? null, body, approved: true },
+      create: { videoId, userId, rating, title: title ?? null, body, approved: true },
     });
 
     revalidatePath(`/video/${video.slug}`);

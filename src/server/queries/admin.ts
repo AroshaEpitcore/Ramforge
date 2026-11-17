@@ -28,6 +28,7 @@ export interface AdminVideoRow {
   title: string;
   slug: string;
   description: string;
+  thumbnailUrl: string | null;
   status: "DRAFT" | "PUBLISHED" | "ARCHIVED";
   accessMode: "FREE" | "PAID" | "MEMBERS";
   source: "MUX" | "YOUTUBE";
@@ -98,6 +99,7 @@ export async function listVideosForAdmin(): Promise<AdminVideoRow[]> {
     title: v.title,
     slug: v.slug,
     description: v.description,
+    thumbnailUrl: v.thumbnailUrl,
     status: v.status,
     accessMode: v.accessMode,
     source: v.source,

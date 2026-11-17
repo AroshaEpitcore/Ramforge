@@ -13,6 +13,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { saveVideo } from "@/features/admin/actions";
+import { ImageUploadField } from "@/features/admin/components/image-upload-field";
 import * as UpChunk from "@mux/upchunk";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
@@ -31,6 +32,7 @@ export function MuxUploadPanel({ categories }: { categories: { id: string; name:
   const router = useRouter();
   const [title, setTitle] = useState("");
   const [categoryId, setCategoryId] = useState("");
+  const [thumbnailUrl, setThumbnailUrl] = useState("");
   const [file, setFile] = useState<File | null>(null);
   const [phase, setPhase] = useState<Phase>("idle");
   const [progress, setProgress] = useState(0);
@@ -48,6 +50,7 @@ export function MuxUploadPanel({ categories }: { categories: { id: string; name:
       title,
       slug: "",
       description: title,
+      thumbnailUrl,
       categoryId,
       courseId: "",
       position: 0,
@@ -103,6 +106,7 @@ export function MuxUploadPanel({ categories }: { categories: { id: string; name:
       });
       setTitle("");
       setCategoryId("");
+      setThumbnailUrl("");
       setFile(null);
       router.refresh();
     });
@@ -148,6 +152,16 @@ export function MuxUploadPanel({ categories }: { categories: { id: string; name:
             onChange={(e) => setFile(e.target.files?.[0] ?? null)}
           />
         </div>
+
+        <ImageUploadField
+          value={thumbnailUrl}
+          onChange={setThumbnailUrl}
+          folder="thumbnails"
+          label="Thumbnail (optional)"
+          allowUrl={false}
+          previewClassName="aspect-video h-auto"
+          hint="Your own cover image for this video — 16:9 works best (e.g. 1280×720 px). Leave empty to use the auto-generated frame."
+        />
 
         {(phase === "uploading" || phase === "processing") && (
           <div className="space-y-1">

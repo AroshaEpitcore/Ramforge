@@ -32,6 +32,7 @@ import {
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { deleteVideo, saveVideo } from "@/features/admin/actions";
+import { ImageUploadField } from "@/features/admin/components/image-upload-field";
 import { videoSchema, type VideoInput } from "@/features/admin/schemas";
 import type { AdminVideoRow } from "@/server/queries/admin";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -213,6 +214,7 @@ function VideoFormDialog({
       title: editing?.title ?? "",
       slug: editing?.slug ?? "",
       description: editing?.description ?? "",
+      thumbnailUrl: editing?.thumbnailUrl ?? "",
       categoryId: editing?.categoryId ?? "",
       courseId: editing?.courseId ?? "",
       position: editing?.position ?? 0,
@@ -299,6 +301,23 @@ function VideoFormDialog({
               <p className="text-xs text-destructive">{errors.description.message}</p>
             )}
           </div>
+
+          <Controller
+            control={control}
+            name="thumbnailUrl"
+            render={({ field }) => (
+              <ImageUploadField
+                value={field.value ?? ""}
+                onChange={field.onChange}
+                folder="thumbnails"
+                label="Thumbnail (optional)"
+                allowUrl
+                previewClassName="aspect-video h-auto"
+                hint="Your own cover image — 16:9 works best (e.g. 1280×720 px). Leave empty to use the auto-generated frame."
+                error={errors.thumbnailUrl?.message as string | undefined}
+              />
+            )}
+          />
 
           <div className="grid gap-4 sm:grid-cols-2">
             <div className="grid gap-2">

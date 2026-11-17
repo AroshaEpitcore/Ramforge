@@ -20,6 +20,7 @@ const EXT_BY_TYPE: Record<string, string> = {
 const FOLDERS: Record<string, { prefix: string; permission: Permission }> = {
   banners: { prefix: "banners", permission: "banners:manage" },
   donate: { prefix: "donate", permission: "settings:manage" },
+  thumbnails: { prefix: "thumbnails", permission: "videos:upload" },
 };
 
 /**

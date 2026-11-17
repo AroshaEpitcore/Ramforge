@@ -299,6 +299,7 @@ export async function saveVideo(raw: unknown): Promise<ActionResult<{ id: string
       title: d.title,
       slug,
       description: d.description,
+      thumbnailUrl: nullify(d.thumbnailUrl),
       categoryId: d.categoryId,
       courseId,
       position: courseId ? d.position : 0,

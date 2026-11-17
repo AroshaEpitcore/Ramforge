@@ -38,6 +38,8 @@ export const videoSchema = z
     title: z.string().trim().min(2, "Enter a title").max(120),
     slug: z.string().trim().max(80).optional(),
     description: z.string().trim().min(1, "Enter a description").max(2000),
+    // A full URL or a site-relative/uploaded path ("/api/assets/thumbnails/…").
+    thumbnailUrl: z.string().trim().max(500).optional(),
     categoryId: z.string().min(1, "Choose a category"),
     courseId: z.string().optional(),
     position: z.number().int().min(0).max(999),

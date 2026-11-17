@@ -1,4 +1,3 @@
-import { BlogList } from "@/components/home/blog-list";
 import { CategorySidebar } from "@/components/home/category-sidebar";
 import { DonateCard } from "@/components/home/donate-card";
 import { HeroCarousel } from "@/components/home/hero-carousel";
@@ -6,17 +5,15 @@ import { SectionHeader } from "@/components/home/section-header";
 import { FadeIn, Stagger, StaggerItem } from "@/components/motion";
 import { BundleCard } from "@/components/shared/bundle-card";
 import { CategoryChip } from "@/components/shared/category-chip";
-import { VideoCard } from "@/components/shared/video-card";
 import { VideoGrid } from "@/components/shared/video-grid";
 import { buildMetadata } from "@/lib/seo";
 import { listStorefrontCategories } from "@/server/queries/categories";
 import { listActiveBanners } from "@/server/queries/marketing";
 import { getDonateImageUrl } from "@/server/services/settings";
 import { listPublishedVideos } from "@/server/queries/videos";
-import { getPublishedBlogPosts } from "@/server/queries/blog";
-import { mockBanners, mockBlogPosts, mockBundles } from "@/mocks";
+import { mockBanners, mockBundles } from "@/mocks";
 import type { Metadata } from "next";
-import { Clapperboard, Flame, Layers, Newspaper } from "lucide-react";
+import { Flame, Layers } from "lucide-react";
 
 // Reads the live database, so render per-request (never prerender at build).
 export const dynamic = "force-dynamic";
@@ -26,19 +23,14 @@ export const metadata: Metadata = buildMetadata({
 });
 
 export default async function HomePage() {
-  const [videos, categories, realBanners, realBlogPosts, donateImageUrl] = await Promise.all([
+  const [videos, categories, realBanners, donateImageUrl] = await Promise.all([
     listPublishedVideos(),
     listStorefrontCategories(),
     listActiveBanners(),
-    getPublishedBlogPosts(5),
     getDonateImageUrl(),
   ]);
   // Fall back to the sample hero imagery until an admin adds real banners.
   const banners = realBanners.length > 0 ? realBanners : mockBanners.filter((b) => b.active);
-  // Fall back to sample posts until an admin publishes real ones.
-  const blogPosts = realBlogPosts.length > 0 ? realBlogPosts : mockBlogPosts;
-  const featured = videos[0];
-  const latest = videos.slice(1, 5);
   const newReleases = videos.slice(0, 8);
 
   return (
@@ -66,36 +58,6 @@ export default async function HomePage() {
               ))}
             </div>
           )}
-
-          {/* Featured / Latest / Blog */}
-          <section className="grid gap-6 lg:grid-cols-3">
-            <div className="flex flex-col gap-3">
-              <SectionHeader
-                title="Featured"
-                icon={<Clapperboard />}
-                viewAllHref="/shop?sort=popular"
-              />
-              {featured ? (
-                <VideoCard video={featured} priority />
-              ) : (
-                <p className="text-sm text-muted-foreground">No videos published yet.</p>
-              )}
-            </div>
-
-            <div className="flex flex-col gap-3">
-              <SectionHeader title="Latest" icon={<Flame />} viewAllHref="/shop?sort=newest" />
-              <div className="grid grid-cols-2 gap-3">
-                {latest.map((v) => (
-                  <VideoCard key={v.id} video={v} variant="compact" />
-                ))}
-              </div>
-            </div>
-
-            <div className="flex flex-col gap-3">
-              <SectionHeader title="On the blog" icon={<Newspaper />} viewAllHref="/blog" />
-              <BlogList posts={blogPosts} />
-            </div>
-          </section>
 
           {/* New releases */}
           <section className="flex flex-col gap-4">
