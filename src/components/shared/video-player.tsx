@@ -2,6 +2,7 @@
 
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
+import { Play } from "lucide-react";
 import Image from "next/image";
 import { useEffect, useRef } from "react";
 
@@ -88,6 +89,15 @@ export function VideoPlayer({ source, title, className, isPreview }: VideoPlayer
           />
         )}
         <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-black/20" />
+        {/* Prominent play cue on the poster. */}
+        <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
+          <span className="relative flex size-16 items-center justify-center">
+            <span className="absolute inline-flex size-full animate-ping rounded-full bg-primary/50" />
+            <span className="relative flex size-16 items-center justify-center rounded-full bg-primary/90 text-primary-foreground shadow-xl ring-2 ring-white/40">
+              <Play className="size-7 translate-x-0.5 fill-current" />
+            </span>
+          </span>
+        </div>
         {isPreview && (
           <div className="absolute top-3 left-3">
             <Badge variant="new">Preview</Badge>
