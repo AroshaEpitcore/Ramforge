@@ -3,8 +3,8 @@ import { JsonLd } from "@/components/shared/json-ld";
 import { VideoGrid } from "@/components/shared/video-grid";
 import { VideoPlayer } from "@/components/shared/video-player";
 import { YouTubeEmbed } from "@/components/shared/youtube-embed";
+import { DonateCard } from "@/components/home/donate-card";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { Duration } from "@/components/ui/duration";
 import { Rating } from "@/components/ui/rating";
 import { Separator } from "@/components/ui/separator";
@@ -15,7 +15,6 @@ import { PlaybackPlayer } from "@/features/videos/components/playback-player";
 import { FavouriteButton } from "@/features/favourites/components/favourite-button";
 import { ReviewForm } from "@/features/reviews/components/review-form";
 import { formatCompactNumber, formatDate, formatFileSize } from "@/lib/formatters";
-import { Heart } from "lucide-react";
 import { buildMetadata } from "@/lib/seo";
 import { ownsVideo } from "@/server/queries/account";
 import { isFavourited } from "@/server/queries/favourites";
@@ -26,7 +25,7 @@ import {
   listApprovedReviews,
 } from "@/server/queries/videos";
 import { getCurrentUser } from "@/server/current-user";
-import { getVideoBanner, isPaymentsEnabled } from "@/server/services/settings";
+import { getDonateImageUrl, getVideoBanner, isPaymentsEnabled } from "@/server/services/settings";
 import type { Video } from "@/types";
 import type { Metadata } from "next";
 import Image from "next/image";
@@ -49,11 +48,12 @@ export default async function VideoDetailsPage({ params }: { params: Promise<{ s
   const video = await getPublishedVideoBySlug(slug);
   if (!video) notFound();
 
-  const [related, reviews, paymentsEnabled, videoBanner, user] = await Promise.all([
+  const [related, reviews, paymentsEnabled, videoBanner, donateImageUrl, user] = await Promise.all([
     getRelatedVideos(video),
     listApprovedReviews(video.id),
     isPaymentsEnabled(),
     getVideoBanner(),
+    getDonateImageUrl(),
     getCurrentUser(),
   ]);
 
@@ -173,15 +173,8 @@ export default async function VideoDetailsPage({ params }: { params: Promise<{ s
             signedIn={Boolean(user)}
             withLabel
           />
-          {/* Always-on support prompt. */}
-          <Button
-            asChild
-            variant="outline"
-            fullWidth
-            leftIcon={<Heart className="fill-current text-primary" />}
-          >
-            <Link href="/support">Donate</Link>
-          </Button>
+          {/* Always-on support prompt — same poster + button as the home page. */}
+          <DonateCard href="/support" imageSrc={donateImageUrl} />
 
           {/* Admin-set promo banner (bundle / upcoming tutorials). */}
           {videoBanner &&
