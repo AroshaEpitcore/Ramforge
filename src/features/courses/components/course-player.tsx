@@ -20,7 +20,7 @@ import { formatCurrency } from "@/lib/formatters";
 import { cn } from "@/lib/utils";
 import type { CourseDetail, Lesson } from "@/types";
 import { CheckCircle2, ChevronRight, Lock, PanelRightOpen, Play } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import { toast } from "sonner";
 
 type Playback = { url?: string; youtubeId?: string; error?: string } | null;
@@ -35,10 +35,13 @@ export function CoursePlayer({
   course,
   paymentsEnabled,
   owned,
+  promo,
 }: {
   course: CourseDetail;
   paymentsEnabled: boolean;
   owned: boolean;
+  /** Optional slot rendered under the course-content card (e.g. donate + bundle). */
+  promo?: ReactNode;
 }) {
   const firstPlayable = course.lessons.find((l) => l.free) ?? course.lessons[0];
   const [activeId, setActiveId] = useState<string | undefined>(firstPlayable?.id);
@@ -282,6 +285,9 @@ export function CoursePlayer({
             )}
           </CardContent>
         </Card>
+
+        {/* Donate + bundle promo, under the course content. */}
+        {promo && <div className="mt-4">{promo}</div>}
       </aside>
     </div>
   );

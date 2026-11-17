@@ -44,16 +44,22 @@ export default async function CourseDetailPage({ params }: { params: Promise<{ s
       <JsonLd data={courseJsonLd(course)} />
       {/* Player sits directly under the navbar (no heading above it). The course
           title and description move below, like a Udemy-style course viewer. */}
-      <CoursePlayer course={course} paymentsEnabled={paymentsEnabled} owned={owned} />
+      <CoursePlayer
+        course={course}
+        paymentsEnabled={paymentsEnabled}
+        owned={owned}
+        promo={
+          <SidebarPromo
+            donateImageUrl={donateImageUrl}
+            videoBanner={videoBanner}
+            bundles={bundles}
+          />
+        }
+      />
       <div className="mt-8 max-w-3xl space-y-2">
         {course.category && <Badge variant="secondary">{course.category.name}</Badge>}
         <h1 className="text-2xl font-semibold tracking-tight">{course.title}</h1>
         <p className="text-muted-foreground">{course.description}</p>
-      </div>
-
-      {/* Donate card + bundle promo, under the course content. */}
-      <div className="mt-10 max-w-sm">
-        <SidebarPromo donateImageUrl={donateImageUrl} videoBanner={videoBanner} bundles={bundles} />
       </div>
     </Container>
   );
