@@ -1,11 +1,10 @@
 import { Container } from "@/components/layout/container";
 import { JsonLd } from "@/components/shared/json-ld";
+import { SidebarPromo } from "@/components/shared/sidebar-promo";
 import { VideoGrid } from "@/components/shared/video-grid";
 import { VideoPlayer } from "@/components/shared/video-player";
 import { YouTubeEmbed } from "@/components/shared/youtube-embed";
-import { DonateCard } from "@/components/home/donate-card";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { Duration } from "@/components/ui/duration";
 import { Rating } from "@/components/ui/rating";
 import { Separator } from "@/components/ui/separator";
@@ -29,10 +28,7 @@ import { listPublishedBundles } from "@/server/queries/bundles";
 import { getCurrentUser } from "@/server/current-user";
 import { getDonateImageUrl, getVideoBanner, isPaymentsEnabled } from "@/server/services/settings";
 import type { Video } from "@/types";
-import { ArrowRight, Layers } from "lucide-react";
 import type { Metadata } from "next";
-import Image from "next/image";
-import Link from "next/link";
 import { notFound } from "next/navigation";
 
 export async function generateMetadata({
@@ -61,12 +57,6 @@ export default async function VideoDetailsPage({ params }: { params: Promise<{ s
       listPublishedBundles(),
       getCurrentUser(),
     ]);
-  // Show the admin-set banner if there is one; otherwise auto-feature a bundle
-  // (pinned to the VFX Starter Bundle, falling back to the newest published one).
-  const PINNED_BUNDLE_SLUG = "vfx-starter-bundle";
-  const featuredBundle = videoBanner
-    ? null
-    : (bundles.find((b) => b.slug === PINNED_BUNDLE_SLUG) ?? bundles[0] ?? null);
 
   const isFree = video.accessMode === "FREE";
   const owned = !isFree && user ? await ownsVideo(user.id, video.id) : false;
@@ -175,66 +165,11 @@ export default async function VideoDetailsPage({ params }: { params: Promise<{ s
             signedIn={Boolean(user)}
             withLabel
           />
-          {/* Always-on support prompt — same poster + button as the home page. */}
-          <DonateCard href="/support" imageSrc={donateImageUrl} />
-
-          {/* Promo slot: admin-set banner first, else auto-feature a bundle. */}
-          {videoBanner ? (
-            videoBanner.href ? (
-              <Link
-                href={videoBanner.href}
-                className="block overflow-hidden rounded-xl border transition-opacity hover:opacity-95"
-              >
-                <Image
-                  src={videoBanner.imageUrl}
-                  alt="Promotion"
-                  width={0}
-                  height={0}
-                  sizes="360px"
-                  className="h-auto w-full"
-                />
-              </Link>
-            ) : (
-              <div className="overflow-hidden rounded-xl border">
-                <Image
-                  src={videoBanner.imageUrl}
-                  alt="Promotion"
-                  width={0}
-                  height={0}
-                  sizes="360px"
-                  className="h-auto w-full"
-                />
-              </div>
-            )
-          ) : featuredBundle ? (
-            <article className="overflow-hidden rounded-xl border bg-card">
-              <Link
-                href={`/bundles/${featuredBundle.slug}`}
-                className="relative block aspect-video overflow-hidden"
-              >
-                {featuredBundle.thumbnailUrl ? (
-                  <Image
-                    src={featuredBundle.thumbnailUrl}
-                    alt={featuredBundle.title}
-                    fill
-                    sizes="360px"
-                    className="object-cover"
-                  />
-                ) : (
-                  <div className="flex size-full items-center justify-center bg-gradient-to-br from-primary/25 to-background">
-                    <Layers className="size-8 text-primary/70" />
-                  </div>
-                )}
-              </Link>
-              <div className="flex flex-col gap-2 p-3">
-                <span className="text-xs font-semibold text-primary">Bundle</span>
-                <h3 className="line-clamp-1 leading-snug font-semibold">{featuredBundle.title}</h3>
-                <Button asChild size="sm" rightIcon={<ArrowRight />}>
-                  <Link href={`/bundles/${featuredBundle.slug}`}>More details</Link>
-                </Button>
-              </div>
-            </article>
-          ) : null}
+          <SidebarPromo
+            donateImageUrl={donateImageUrl}
+            videoBanner={videoBanner}
+            bundles={bundles}
+          />
         </aside>
       </div>
 

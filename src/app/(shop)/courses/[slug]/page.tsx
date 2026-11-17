@@ -1,13 +1,15 @@
 import { Container } from "@/components/layout/container";
 import { JsonLd } from "@/components/shared/json-ld";
+import { SidebarPromo } from "@/components/shared/sidebar-promo";
 import { Badge } from "@/components/ui/badge";
 import { siteConfig } from "@/config/site";
 import { CoursePlayer } from "@/features/courses/components/course-player";
 import { buildMetadata } from "@/lib/seo";
 import { ownsCourse } from "@/server/queries/account";
 import { getCourseBySlug } from "@/server/queries/courses";
+import { listPublishedBundles } from "@/server/queries/bundles";
 import { getCurrentUser } from "@/server/current-user";
-import { isPaymentsEnabled } from "@/server/services/settings";
+import { getDonateImageUrl, getVideoBanner, isPaymentsEnabled } from "@/server/services/settings";
 import type { CourseDetail } from "@/types";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
@@ -25,9 +27,12 @@ export async function generateMetadata({
 
 export default async function CourseDetailPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
-  const [course, paymentsEnabled, user] = await Promise.all([
+  const [course, paymentsEnabled, videoBanner, donateImageUrl, bundles, user] = await Promise.all([
     getCourseBySlug(slug),
     isPaymentsEnabled(),
+    getVideoBanner(),
+    getDonateImageUrl(),
+    listPublishedBundles(),
     getCurrentUser(),
   ]);
   if (!course) notFound();
@@ -40,10 +45,19 @@ export default async function CourseDetailPage({ params }: { params: Promise<{ s
       {/* Player sits directly under the navbar (no heading above it). The course
           title and description move below, like a Udemy-style course viewer. */}
       <CoursePlayer course={course} paymentsEnabled={paymentsEnabled} owned={owned} />
-      <div className="mt-8 max-w-3xl space-y-2">
-        {course.category && <Badge variant="secondary">{course.category.name}</Badge>}
-        <h1 className="text-2xl font-semibold tracking-tight">{course.title}</h1>
-        <p className="text-muted-foreground">{course.description}</p>
+      <div className="mt-8 grid gap-8 lg:grid-cols-[1fr_320px] lg:items-start">
+        <div className="max-w-3xl space-y-2">
+          {course.category && <Badge variant="secondary">{course.category.name}</Badge>}
+          <h1 className="text-2xl font-semibold tracking-tight">{course.title}</h1>
+          <p className="text-muted-foreground">{course.description}</p>
+        </div>
+        <aside className="lg:sticky lg:top-16">
+          <SidebarPromo
+            donateImageUrl={donateImageUrl}
+            videoBanner={videoBanner}
+            bundles={bundles}
+          />
+        </aside>
       </div>
     </Container>
   );

@@ -58,10 +58,13 @@ export function VideoCard({ video, variant = "default", className, priority }: V
             <Play className="size-10 text-primary/60" />
           </div>
         )}
-        {/* Hover play overlay */}
-        <div className="absolute inset-0 flex items-center justify-center bg-black/30 opacity-0 transition-opacity duration-300 group-hover:opacity-100">
-          <span className="flex size-12 items-center justify-center rounded-full bg-primary/90 text-primary-foreground shadow-lg">
-            <Play className="size-5 translate-x-0.5 fill-current" />
+        {/* Always-visible, animated play button (scales + pulses a ring on hover). */}
+        <div className="pointer-events-none absolute inset-0 flex items-center justify-center bg-black/10 transition-colors duration-300 group-hover:bg-black/35">
+          <span className="relative flex size-12 items-center justify-center">
+            <span className="absolute inline-flex size-full rounded-full bg-primary/60 opacity-0 transition-opacity duration-300 group-hover:animate-ping group-hover:opacity-100" />
+            <span className="relative flex size-12 items-center justify-center rounded-full bg-primary/90 text-primary-foreground shadow-lg ring-2 ring-white/40 transition-transform duration-300 group-hover:scale-110">
+              <Play className="size-5 translate-x-0.5 fill-current" />
+            </span>
           </span>
         </div>
 
