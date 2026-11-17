@@ -12,7 +12,13 @@ export const SETTING_KEYS = {
   paymentsEnabled: "payments.enabled",
   vatRatePercent: "tax.vatRatePercent",
   donateImageUrl: "donate.imageUrl",
+  videoBanner: "video.banner",
 } as const;
+
+export interface VideoBanner {
+  imageUrl: string;
+  href: string;
+}
 
 export async function getSetting<T>(key: string, fallback: T): Promise<T> {
   const row = await db.setting.findUnique({ where: { key } });
@@ -43,4 +49,13 @@ export async function getVatRatePercent(): Promise<number> {
 export async function getDonateImageUrl(): Promise<string | null> {
   const v = await getSetting<string | null>(SETTING_KEYS.donateImageUrl, null);
   return typeof v === "string" && v.length > 0 ? v : null;
+}
+
+/** Admin-set promo banner shown in the video-page sidebar, or null if unset. */
+export async function getVideoBanner(): Promise<VideoBanner | null> {
+  const v = await getSetting<VideoBanner | null>(SETTING_KEYS.videoBanner, null);
+  if (v && typeof v.imageUrl === "string" && v.imageUrl.length > 0) {
+    return { imageUrl: v.imageUrl, href: typeof v.href === "string" ? v.href : "" };
+  }
+  return null;
 }

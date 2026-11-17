@@ -6,6 +6,7 @@ import { getCurrentUser } from "@/server/current-user";
 import {
   getDonateImageUrl,
   getVatRatePercent,
+  getVideoBanner,
   isPaymentsEnabled,
 } from "@/server/services/settings";
 import type { Metadata } from "next";
@@ -18,10 +19,11 @@ export default async function AdminSettingsPage() {
   if (!user) redirect("/login?callbackUrl=/admin/settings");
   requirePermission(user, "settings:manage");
 
-  const [paymentsEnabled, vatRate, donateImageUrl] = await Promise.all([
+  const [paymentsEnabled, vatRate, donateImageUrl, videoBanner] = await Promise.all([
     isPaymentsEnabled(),
     getVatRatePercent(),
     getDonateImageUrl(),
+    getVideoBanner(),
   ]);
 
   return (
@@ -31,6 +33,7 @@ export default async function AdminSettingsPage() {
         paymentsEnabled={paymentsEnabled}
         vatRate={vatRate}
         donateImageUrl={donateImageUrl}
+        videoBanner={videoBanner}
       />
     </div>
   );

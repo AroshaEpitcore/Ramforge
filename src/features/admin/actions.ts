@@ -391,6 +391,27 @@ export async function setDonateImage(url: string): Promise<ActionResult> {
   }
 }
 
+/** Set (or clear, with an empty image) the video-page sidebar promo banner. */
+export async function setVideoBanner(imageUrl: string, href: string): Promise<ActionResult> {
+  try {
+    await authorize("settings:manage");
+    const img = imageUrl.trim();
+    const link = href.trim();
+    if (img && !(img.startsWith("/") || /^https?:\/\//i.test(img))) {
+      return fail("Enter a valid image URL.");
+    }
+    if (link && !(link.startsWith("/") || /^https?:\/\//i.test(link))) {
+      return fail("Enter a valid link (start with / for an internal page).");
+    }
+    await setSetting(SETTING_KEYS.videoBanner, { imageUrl: img, href: link });
+    revalidatePath("/admin/settings");
+    revalidatePath("/", "layout");
+    return { ok: true, data: undefined };
+  } catch (e) {
+    return handleError(e);
+  }
+}
+
 // --- Newsletter ------------------------------------------------------------
 
 /** Export confirmed-or-pending subscribers as CSV text (admin downloads it). */

@@ -10,6 +10,7 @@ import {
   setDonateImage,
   setPaymentsEnabled,
   setVatRate,
+  setVideoBanner,
 } from "@/features/admin/actions";
 import { ImageUploadField } from "@/features/admin/components/image-upload-field";
 import { Download } from "lucide-react";
@@ -21,10 +22,12 @@ export function SettingsPanel({
   paymentsEnabled,
   vatRate,
   donateImageUrl,
+  videoBanner,
 }: {
   paymentsEnabled: boolean;
   vatRate: number;
   donateImageUrl: string | null;
+  videoBanner: { imageUrl: string; href: string } | null;
 }) {
   const router = useRouter();
   const [enabled, setEnabled] = useState(paymentsEnabled);
@@ -34,6 +37,9 @@ export function SettingsPanel({
   const [savingVat, setSavingVat] = useState(false);
   const [donateImg, setDonateImg] = useState(donateImageUrl ?? "");
   const [savingDonate, setSavingDonate] = useState(false);
+  const [vbImage, setVbImage] = useState(videoBanner?.imageUrl ?? "");
+  const [vbHref, setVbHref] = useState(videoBanner?.href ?? "");
+  const [savingVb, setSavingVb] = useState(false);
 
   const saveDonate = async (next: string) => {
     setDonateImg(next); // reflect immediately
@@ -43,6 +49,17 @@ export function SettingsPanel({
     if (!res.ok) toast.error("Could not save", { description: res.error });
     else {
       toast.success(next ? "Donate image updated" : "Reverted to default image");
+      router.refresh();
+    }
+  };
+
+  const saveVideoBanner = async (image: string, link: string) => {
+    setSavingVb(true);
+    const res = await setVideoBanner(image, link);
+    setSavingVb(false);
+    if (!res.ok) toast.error("Could not save", { description: res.error });
+    else {
+      toast.success(image ? "Video banner saved" : "Video banner removed");
       router.refresh();
     }
   };
@@ -155,6 +172,42 @@ export function SettingsPanel({
             hint="Use a tall portrait image — 4:5 works best (e.g. 1080×1350 px). Any headline text should be baked into the artwork; the Donate button is added automatically."
           />
           {savingDonate && <p className="mt-2 text-xs text-muted-foreground">Saving…</p>}
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Video page banner</CardTitle>
+          <CardDescription>
+            A promo image shown in the sidebar of every video page (e.g. a bundle or an
+            upcoming-tutorials teaser). Set where it links, then upload the image. Remove the image
+            to hide the banner.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          <div className="grid gap-1.5">
+            <Label htmlFor="vb-href">Link (where the banner goes when clicked)</Label>
+            <Input
+              id="vb-href"
+              placeholder="/bundles/your-bundle"
+              value={vbHref}
+              onChange={(e) => setVbHref(e.target.value)}
+              onBlur={() => vbImage && saveVideoBanner(vbImage, vbHref)}
+            />
+          </div>
+          <ImageUploadField
+            value={vbImage}
+            onChange={(url) => {
+              setVbImage(url);
+              saveVideoBanner(url, vbHref);
+            }}
+            folder="promos"
+            label="Banner image"
+            allowUrl={false}
+            previewClassName="h-40"
+            hint="Any shape works; a portrait (e.g. 3:4) or square fits the sidebar best. Keep important text large."
+          />
+          {savingVb && <p className="text-xs text-muted-foreground">Saving…</p>}
         </CardContent>
       </Card>
 

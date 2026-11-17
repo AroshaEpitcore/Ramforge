@@ -26,9 +26,10 @@ import {
   listApprovedReviews,
 } from "@/server/queries/videos";
 import { getCurrentUser } from "@/server/current-user";
-import { isPaymentsEnabled } from "@/server/services/settings";
+import { getVideoBanner, isPaymentsEnabled } from "@/server/services/settings";
 import type { Video } from "@/types";
 import type { Metadata } from "next";
+import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
@@ -48,10 +49,11 @@ export default async function VideoDetailsPage({ params }: { params: Promise<{ s
   const video = await getPublishedVideoBySlug(slug);
   if (!video) notFound();
 
-  const [related, reviews, paymentsEnabled, user] = await Promise.all([
+  const [related, reviews, paymentsEnabled, videoBanner, user] = await Promise.all([
     getRelatedVideos(video),
     listApprovedReviews(video.id),
     isPaymentsEnabled(),
+    getVideoBanner(),
     getCurrentUser(),
   ]);
 
@@ -180,6 +182,35 @@ export default async function VideoDetailsPage({ params }: { params: Promise<{ s
           >
             <Link href="/support">Donate</Link>
           </Button>
+
+          {/* Admin-set promo banner (bundle / upcoming tutorials). */}
+          {videoBanner &&
+            (videoBanner.href ? (
+              <Link
+                href={videoBanner.href}
+                className="block overflow-hidden rounded-xl border transition-opacity hover:opacity-95"
+              >
+                <Image
+                  src={videoBanner.imageUrl}
+                  alt="Promotion"
+                  width={0}
+                  height={0}
+                  sizes="360px"
+                  className="h-auto w-full"
+                />
+              </Link>
+            ) : (
+              <div className="overflow-hidden rounded-xl border">
+                <Image
+                  src={videoBanner.imageUrl}
+                  alt="Promotion"
+                  width={0}
+                  height={0}
+                  sizes="360px"
+                  className="h-auto w-full"
+                />
+              </div>
+            ))}
         </aside>
       </div>
 

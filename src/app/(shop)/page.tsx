@@ -1,19 +1,20 @@
+import { BundleBanner } from "@/components/home/bundle-banner";
 import { CategorySidebar } from "@/components/home/category-sidebar";
 import { DonateCard } from "@/components/home/donate-card";
 import { HeroCarousel } from "@/components/home/hero-carousel";
 import { SectionHeader } from "@/components/home/section-header";
-import { FadeIn, Stagger, StaggerItem } from "@/components/motion";
-import { BundleCard } from "@/components/shared/bundle-card";
+import { FadeIn } from "@/components/motion";
 import { CategoryChip } from "@/components/shared/category-chip";
 import { VideoGrid } from "@/components/shared/video-grid";
 import { buildMetadata } from "@/lib/seo";
 import { listStorefrontCategories } from "@/server/queries/categories";
 import { listActiveBanners } from "@/server/queries/marketing";
+import { listPublishedBundles } from "@/server/queries/bundles";
 import { getDonateImageUrl } from "@/server/services/settings";
 import { listPublishedVideos } from "@/server/queries/videos";
 import { mockBanners, mockBundles } from "@/mocks";
 import type { Metadata } from "next";
-import { Flame, Layers } from "lucide-react";
+import { Flame } from "lucide-react";
 
 // Reads the live database, so render per-request (never prerender at build).
 export const dynamic = "force-dynamic";
@@ -23,14 +24,17 @@ export const metadata: Metadata = buildMetadata({
 });
 
 export default async function HomePage() {
-  const [videos, categories, realBanners, donateImageUrl] = await Promise.all([
+  const [videos, categories, realBanners, realBundles, donateImageUrl] = await Promise.all([
     listPublishedVideos(),
     listStorefrontCategories(),
     listActiveBanners(),
+    listPublishedBundles(),
     getDonateImageUrl(),
   ]);
   // Fall back to the sample hero imagery until an admin adds real banners.
   const banners = realBanners.length > 0 ? realBanners : mockBanners.filter((b) => b.active);
+  // Fall back to sample bundles until real ones are published.
+  const bundles = realBundles.length > 0 ? realBundles : mockBundles;
   const newReleases = videos.slice(0, 8);
 
   return (
@@ -67,17 +71,8 @@ export default async function HomePage() {
             </FadeIn>
           </section>
 
-          {/* Bundles */}
-          <section className="flex flex-col gap-4">
-            <SectionHeader title="Save with bundles" icon={<Layers />} viewAllHref="/bundles" />
-            <Stagger className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-              {mockBundles.map((bundle) => (
-                <StaggerItem key={bundle.id}>
-                  <BundleCard bundle={bundle} />
-                </StaggerItem>
-              ))}
-            </Stagger>
-          </section>
+          {/* Bundles — wide promo banner */}
+          <BundleBanner bundles={bundles} />
         </div>
       </div>
     </div>
