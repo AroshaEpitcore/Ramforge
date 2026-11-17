@@ -2,7 +2,6 @@ import { Container } from "@/components/layout/container";
 import { JsonLd } from "@/components/shared/json-ld";
 import { SidebarPromo } from "@/components/shared/sidebar-promo";
 import { VideoGrid } from "@/components/shared/video-grid";
-import { VideoPlayer } from "@/components/shared/video-player";
 import { YouTubeEmbed } from "@/components/shared/youtube-embed";
 import { Badge } from "@/components/ui/badge";
 import { Duration } from "@/components/ui/duration";
@@ -12,6 +11,7 @@ import { QUALITY_LABELS } from "@/config/constants";
 import { siteConfig } from "@/config/site";
 import { VideoAccessBox } from "@/features/commerce/components/video-access-box";
 import { PlaybackPlayer } from "@/features/videos/components/playback-player";
+import { PreviewPlayer } from "@/features/videos/components/preview-player";
 import { FavouriteButton } from "@/features/favourites/components/favourite-button";
 import { ReviewForm } from "@/features/reviews/components/review-form";
 import { formatCompactNumber, formatDate, formatFileSize } from "@/lib/formatters";
@@ -81,10 +81,10 @@ export default async function VideoDetailsPage({ params }: { params: Promise<{ s
                 title={video.title}
               />
             ) : (
-              <VideoPlayer
-                source={{ poster: video.thumbnailUrl || undefined }}
+              <PreviewPlayer
+                videoId={video.id}
+                poster={video.thumbnailUrl || undefined}
                 title={video.title}
-                isPreview
               />
             )}
           </div>
