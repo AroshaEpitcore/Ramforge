@@ -61,8 +61,12 @@ export default async function VideoDetailsPage({ params }: { params: Promise<{ s
       listPublishedBundles(),
       getCurrentUser(),
     ]);
-  // Show the admin-set banner if there is one; otherwise auto-feature a bundle.
-  const featuredBundle = !videoBanner && bundles.length > 0 ? bundles[0] : null;
+  // Show the admin-set banner if there is one; otherwise auto-feature a bundle
+  // (pinned to the VFX Starter Bundle, falling back to the newest published one).
+  const PINNED_BUNDLE_SLUG = "vfx-starter-bundle";
+  const featuredBundle = videoBanner
+    ? null
+    : (bundles.find((b) => b.slug === PINNED_BUNDLE_SLUG) ?? bundles[0] ?? null);
 
   const isFree = video.accessMode === "FREE";
   const owned = !isFree && user ? await ownsVideo(user.id, video.id) : false;
