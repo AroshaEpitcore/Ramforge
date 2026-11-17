@@ -23,7 +23,8 @@ const columnClasses: Record<NonNullable<VideoGridProps["columns"]>, string> = {
 
 export function VideoGrid({
   videos,
-  variant = "default",
+  // Match the home "New releases" look everywhere (play button + sub-description).
+  variant = "template",
   className,
   columns = 4,
   emptyTitle = "No videos found",
