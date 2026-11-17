@@ -5,6 +5,7 @@ import { VideoPlayer } from "@/components/shared/video-player";
 import { YouTubeEmbed } from "@/components/shared/youtube-embed";
 import { DonateCard } from "@/components/home/donate-card";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Duration } from "@/components/ui/duration";
 import { Rating } from "@/components/ui/rating";
 import { Separator } from "@/components/ui/separator";
@@ -24,9 +25,11 @@ import {
   getRelatedVideos,
   listApprovedReviews,
 } from "@/server/queries/videos";
+import { listPublishedBundles } from "@/server/queries/bundles";
 import { getCurrentUser } from "@/server/current-user";
 import { getDonateImageUrl, getVideoBanner, isPaymentsEnabled } from "@/server/services/settings";
 import type { Video } from "@/types";
+import { ArrowRight, Layers } from "lucide-react";
 import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
@@ -48,14 +51,18 @@ export default async function VideoDetailsPage({ params }: { params: Promise<{ s
   const video = await getPublishedVideoBySlug(slug);
   if (!video) notFound();
 
-  const [related, reviews, paymentsEnabled, videoBanner, donateImageUrl, user] = await Promise.all([
-    getRelatedVideos(video),
-    listApprovedReviews(video.id),
-    isPaymentsEnabled(),
-    getVideoBanner(),
-    getDonateImageUrl(),
-    getCurrentUser(),
-  ]);
+  const [related, reviews, paymentsEnabled, videoBanner, donateImageUrl, bundles, user] =
+    await Promise.all([
+      getRelatedVideos(video),
+      listApprovedReviews(video.id),
+      isPaymentsEnabled(),
+      getVideoBanner(),
+      getDonateImageUrl(),
+      listPublishedBundles(),
+      getCurrentUser(),
+    ]);
+  // Show the admin-set banner if there is one; otherwise auto-feature a bundle.
+  const featuredBundle = !videoBanner && bundles.length > 0 ? bundles[0] : null;
 
   const isFree = video.accessMode === "FREE";
   const owned = !isFree && user ? await ownsVideo(user.id, video.id) : false;
@@ -167,9 +174,9 @@ export default async function VideoDetailsPage({ params }: { params: Promise<{ s
           {/* Always-on support prompt — same poster + button as the home page. */}
           <DonateCard href="/support" imageSrc={donateImageUrl} />
 
-          {/* Admin-set promo banner (bundle / upcoming tutorials). */}
-          {videoBanner &&
-            (videoBanner.href ? (
+          {/* Promo slot: admin-set banner first, else auto-feature a bundle. */}
+          {videoBanner ? (
+            videoBanner.href ? (
               <Link
                 href={videoBanner.href}
                 className="block overflow-hidden rounded-xl border transition-opacity hover:opacity-95"
@@ -194,7 +201,36 @@ export default async function VideoDetailsPage({ params }: { params: Promise<{ s
                   className="h-auto w-full"
                 />
               </div>
-            ))}
+            )
+          ) : featuredBundle ? (
+            <article className="overflow-hidden rounded-xl border bg-card">
+              <Link
+                href={`/bundles/${featuredBundle.slug}`}
+                className="relative block aspect-video overflow-hidden"
+              >
+                {featuredBundle.thumbnailUrl ? (
+                  <Image
+                    src={featuredBundle.thumbnailUrl}
+                    alt={featuredBundle.title}
+                    fill
+                    sizes="360px"
+                    className="object-cover"
+                  />
+                ) : (
+                  <div className="flex size-full items-center justify-center bg-gradient-to-br from-primary/25 to-background">
+                    <Layers className="size-8 text-primary/70" />
+                  </div>
+                )}
+              </Link>
+              <div className="flex flex-col gap-2 p-3">
+                <span className="text-xs font-semibold text-primary">Bundle</span>
+                <h3 className="line-clamp-1 leading-snug font-semibold">{featuredBundle.title}</h3>
+                <Button asChild size="sm" rightIcon={<ArrowRight />}>
+                  <Link href={`/bundles/${featuredBundle.slug}`}>More details</Link>
+                </Button>
+              </div>
+            </article>
+          ) : null}
         </aside>
       </div>
 
