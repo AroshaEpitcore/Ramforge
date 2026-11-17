@@ -5,7 +5,13 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
-import { exportNewsletterCsv, setPaymentsEnabled, setVatRate } from "@/features/admin/actions";
+import {
+  exportNewsletterCsv,
+  setDonateImage,
+  setPaymentsEnabled,
+  setVatRate,
+} from "@/features/admin/actions";
+import { ImageUploadField } from "@/features/admin/components/image-upload-field";
 import { Download } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
@@ -14,9 +20,11 @@ import { toast } from "sonner";
 export function SettingsPanel({
   paymentsEnabled,
   vatRate,
+  donateImageUrl,
 }: {
   paymentsEnabled: boolean;
   vatRate: number;
+  donateImageUrl: string | null;
 }) {
   const router = useRouter();
   const [enabled, setEnabled] = useState(paymentsEnabled);
@@ -24,6 +32,20 @@ export function SettingsPanel({
   const [exporting, setExporting] = useState(false);
   const [vat, setVat] = useState(vatRate);
   const [savingVat, setSavingVat] = useState(false);
+  const [donateImg, setDonateImg] = useState(donateImageUrl ?? "");
+  const [savingDonate, setSavingDonate] = useState(false);
+
+  const saveDonate = async (next: string) => {
+    setDonateImg(next); // reflect immediately
+    setSavingDonate(true);
+    const res = await setDonateImage(next);
+    setSavingDonate(false);
+    if (!res.ok) toast.error("Could not save", { description: res.error });
+    else {
+      toast.success(next ? "Donate image updated" : "Reverted to default image");
+      router.refresh();
+    }
+  };
 
   const saveVat = async () => {
     setSavingVat(true);
@@ -111,6 +133,28 @@ export function SettingsPanel({
           <Button onClick={saveVat} loading={savingVat}>
             Save
           </Button>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Donate card image</CardTitle>
+          <CardDescription>
+            The poster shown in the homepage donate card. Upload to replace it, or remove your
+            upload to go back to the built-in image.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <ImageUploadField
+            value={donateImg}
+            onChange={saveDonate}
+            folder="donate"
+            label="Poster"
+            allowUrl={false}
+            previewClassName="h-56"
+            hint="Use a tall portrait image — 4:5 works best (e.g. 1080×1350 px). Any headline text should be baked into the artwork; the Donate button is added automatically."
+          />
+          {savingDonate && <p className="mt-2 text-xs text-muted-foreground">Saving…</p>}
         </CardContent>
       </Card>
 

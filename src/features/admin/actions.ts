@@ -373,6 +373,23 @@ export async function setVatRate(percent: number): Promise<ActionResult> {
   }
 }
 
+/** Set (or clear, with "") the donate card poster image. */
+export async function setDonateImage(url: string): Promise<ActionResult> {
+  try {
+    await authorize("settings:manage");
+    const v = url.trim();
+    if (v && !(v.startsWith("/") || /^https?:\/\//i.test(v))) {
+      return fail("Enter a valid image URL.");
+    }
+    await setSetting(SETTING_KEYS.donateImageUrl, v || "");
+    revalidatePath("/admin/settings");
+    revalidatePath("/", "layout");
+    return { ok: true, data: undefined };
+  } catch (e) {
+    return handleError(e);
+  }
+}
+
 // --- Newsletter ------------------------------------------------------------
 
 /** Export confirmed-or-pending subscribers as CSV text (admin downloads it). */

@@ -11,6 +11,7 @@ import type { Prisma } from "@/generated/prisma";
 export const SETTING_KEYS = {
   paymentsEnabled: "payments.enabled",
   vatRatePercent: "tax.vatRatePercent",
+  donateImageUrl: "donate.imageUrl",
 } as const;
 
 export async function getSetting<T>(key: string, fallback: T): Promise<T> {
@@ -36,4 +37,10 @@ export async function isPaymentsEnabled(): Promise<boolean> {
 export async function getVatRatePercent(): Promise<number> {
   const v = await getSetting<number>(SETTING_KEYS.vatRatePercent, 0);
   return typeof v === "number" && v > 0 ? Math.min(100, v) : 0;
+}
+
+/** Admin-set donate card image URL, or null to use the bundled default. */
+export async function getDonateImageUrl(): Promise<string | null> {
+  const v = await getSetting<string | null>(SETTING_KEYS.donateImageUrl, null);
+  return typeof v === "string" && v.length > 0 ? v : null;
 }

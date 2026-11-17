@@ -22,7 +22,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
-import { BannerImageField } from "@/features/admin/components/banner-image-field";
+import { ImageUploadField } from "@/features/admin/components/image-upload-field";
 import { deleteBanner, saveBanner } from "@/features/admin/marketing-actions";
 import { bannerSchema, type BannerInput } from "@/features/admin/schemas";
 import type { AdminBannerRow } from "@/server/queries/marketing";
@@ -209,9 +209,11 @@ function BannerFormDialog({
             control={control}
             name="imageUrl"
             render={({ field: f }) => (
-              <BannerImageField
+              <ImageUploadField
                 value={f.value ?? ""}
                 onChange={f.onChange}
+                folder="banners"
+                hint="Use a wide landscape image — 21:9 works best (e.g. 1920×820 px). 16:9 (1920×1080) is fine too. Keep the main subject centred; the left/right edges may be cropped on small screens. If your artwork already has its own headline text, leave the Title/Subtitle/Button fields empty and the slide shows the image on its own."
                 error={errors.imageUrl?.message as string | undefined}
               />
             )}

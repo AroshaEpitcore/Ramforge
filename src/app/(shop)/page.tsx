@@ -11,6 +11,7 @@ import { VideoGrid } from "@/components/shared/video-grid";
 import { buildMetadata } from "@/lib/seo";
 import { listStorefrontCategories } from "@/server/queries/categories";
 import { listActiveBanners } from "@/server/queries/marketing";
+import { getDonateImageUrl } from "@/server/services/settings";
 import { listPublishedVideos } from "@/server/queries/videos";
 import { getPublishedBlogPosts } from "@/server/queries/blog";
 import { mockBanners, mockBlogPosts, mockBundles } from "@/mocks";
@@ -25,11 +26,12 @@ export const metadata: Metadata = buildMetadata({
 });
 
 export default async function HomePage() {
-  const [videos, categories, realBanners, realBlogPosts] = await Promise.all([
+  const [videos, categories, realBanners, realBlogPosts, donateImageUrl] = await Promise.all([
     listPublishedVideos(),
     listStorefrontCategories(),
     listActiveBanners(),
     getPublishedBlogPosts(5),
+    getDonateImageUrl(),
   ]);
   // Fall back to the sample hero imagery until an admin adds real banners.
   const banners = realBanners.length > 0 ? realBanners : mockBanners.filter((b) => b.active);
@@ -53,7 +55,7 @@ export default async function HomePage() {
           {/* Hero + promo */}
           <section className="grid gap-4 lg:grid-cols-[1fr_320px]">
             <HeroCarousel banners={banners} />
-            <DonateCard href="/support" className="hidden lg:block" />
+            <DonateCard href="/support" className="hidden lg:block" imageSrc={donateImageUrl} />
           </section>
 
           {/* Category chips (mobile + quick browse) */}

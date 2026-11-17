@@ -1,5 +1,5 @@
 import { ACCEPTED_IMAGE_MIME_PREFIX, MAX_IMAGE_UPLOAD_BYTES } from "@/config/constants";
-import { ForbiddenError, requirePermission } from "@/lib/rbac";
+import { ForbiddenError, requirePermission, type Permission } from "@/lib/rbac";
 import { putObject } from "@/lib/storage/neon";
 import { getCurrentUser } from "@/server/current-user";
 import { randomUUID } from "node:crypto";
@@ -16,17 +16,31 @@ const EXT_BY_TYPE: Record<string, string> = {
   "image/gif": "gif",
 };
 
+/** Upload targets: each maps to a storage prefix and the permission it needs. */
+const FOLDERS: Record<string, { prefix: string; permission: Permission }> = {
+  banners: { prefix: "banners", permission: "banners:manage" },
+  donate: { prefix: "donate", permission: "settings:manage" },
+};
+
 /**
- * Upload a banner/marketing image. Stores it in Neon Object Storage under
- * `banners/<uuid>.<ext>` and returns a stable, same-origin URL served by
- * `/api/assets/*`. Staff-only (`banners:manage`).
+ * Upload a marketing image. Stores it in Neon Object Storage under
+ * `<folder>/<uuid>.<ext>` and returns a stable, same-origin URL served by
+ * `/api/assets/*`. The `folder` form field selects the target and the
+ * permission it requires.
  */
 export async function POST(req: NextRequest) {
   const user = await getCurrentUser();
   if (!user) return NextResponse.json({ error: "Authentication required." }, { status: 401 });
 
+  const form = await req.formData().catch(() => null);
+  const folderKey = (form?.get("folder") as string | null) ?? "banners";
+  const folder = FOLDERS[folderKey];
+  if (!folder) {
+    return NextResponse.json({ error: "Unknown upload target." }, { status: 400 });
+  }
+
   try {
-    requirePermission(user, "banners:manage");
+    requirePermission(user, folder.permission);
   } catch (err) {
     if (err instanceof ForbiddenError) {
       return NextResponse.json({ error: "You do not have permission to upload." }, { status: 403 });
@@ -34,12 +48,10 @@ export async function POST(req: NextRequest) {
     throw err;
   }
 
-  const form = await req.formData().catch(() => null);
   const file = form?.get("file");
   if (!(file instanceof File)) {
     return NextResponse.json({ error: "No file provided." }, { status: 400 });
   }
-
   if (!file.type.startsWith(ACCEPTED_IMAGE_MIME_PREFIX)) {
     return NextResponse.json({ error: "Only image files are accepted." }, { status: 400 });
   }
@@ -49,7 +61,7 @@ export async function POST(req: NextRequest) {
   }
 
   const ext = EXT_BY_TYPE[file.type] ?? "bin";
-  const key = `banners/${randomUUID()}.${ext}`;
+  const key = `${folder.prefix}/${randomUUID()}.${ext}`;
 
   try {
     const bytes = new Uint8Array(await file.arrayBuffer());
