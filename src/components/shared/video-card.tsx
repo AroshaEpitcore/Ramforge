@@ -12,8 +12,12 @@ import Link from "next/link";
 
 export interface VideoCardProps {
   video: Video;
-  /** "default" = full card with price; "compact" = smaller, for dense grids. */
-  variant?: "default" | "compact";
+  /**
+   * "default" = full card with price; "compact" = smaller, for dense grids;
+   * "template" = default card plus a play button beside the title and a
+   * one-line sub-description (New-releases style).
+   */
+  variant?: "default" | "compact" | "template";
   className?: string;
   priority?: boolean;
 }
@@ -24,7 +28,13 @@ export interface VideoCardProps {
  */
 export function VideoCard({ video, variant = "default", className, priority }: VideoCardProps) {
   const compact = variant === "compact";
+  const isTemplate = variant === "template";
   const onSale = typeof video.salePrice === "number" && video.salePrice < video.price;
+  // Avoid duplicating the title when the description was defaulted to it.
+  const subDescription =
+    video.description && video.description !== video.title
+      ? video.description
+      : video.category.name;
 
   return (
     <article
@@ -85,11 +95,33 @@ export function VideoCard({ video, variant = "default", className, priority }: V
           </Link>
         </div>
 
-        <h3 className={cn("leading-snug font-semibold", compact ? "text-sm" : "text-base")}>
-          <Link href={`/video/${video.slug}`} className="line-clamp-2 outline-none after:absolute">
-            {video.title}
-          </Link>
-        </h3>
+        <div className={cn(isTemplate && "flex items-start gap-2.5")}>
+          {isTemplate && (
+            <Link
+              href={`/video/${video.slug}`}
+              aria-label={`Play ${video.title}`}
+              className="mt-0.5 flex size-9 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground shadow transition-transform hover:scale-105"
+            >
+              <Play className="size-4 translate-x-px fill-current" />
+            </Link>
+          )}
+          <div className={cn(isTemplate && "min-w-0 flex-1")}>
+            <h3 className={cn("leading-snug font-semibold", compact ? "text-sm" : "text-base")}>
+              <Link
+                href={`/video/${video.slug}`}
+                className={cn(
+                  "outline-none",
+                  isTemplate ? "line-clamp-1" : "line-clamp-2 after:absolute",
+                )}
+              >
+                {video.title}
+              </Link>
+            </h3>
+            {isTemplate && (
+              <p className="mt-0.5 line-clamp-1 text-xs text-muted-foreground">{subDescription}</p>
+            )}
+          </div>
+        </div>
 
         <div className="flex items-center gap-2 text-xs text-muted-foreground">
           <Rating value={video.rating} size="sm" />

@@ -7,7 +7,7 @@ import { Film } from "lucide-react";
 
 export interface VideoGridProps {
   videos: Video[];
-  variant?: "default" | "compact";
+  variant?: "default" | "compact" | "template";
   className?: string;
   columns?: "auto" | 2 | 3 | 4;
   emptyTitle?: string;
@@ -30,9 +30,7 @@ export function VideoGrid({
   emptyDescription = "Try adjusting your filters or search.",
 }: VideoGridProps) {
   if (videos.length === 0) {
-    return (
-      <EmptyState icon={<Film />} title={emptyTitle} description={emptyDescription} />
-    );
+    return <EmptyState icon={<Film />} title={emptyTitle} description={emptyDescription} />;
   }
 
   return (

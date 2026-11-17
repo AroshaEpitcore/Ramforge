@@ -67,7 +67,7 @@ export default async function HomePage() {
           <section className="flex flex-col gap-4">
             <SectionHeader title="New releases" icon={<Flame />} viewAllHref="/shop?sort=newest" />
             <FadeIn>
-              <VideoGrid videos={newReleases} columns={4} />
+              <VideoGrid videos={newReleases} columns={4} variant="template" />
             </FadeIn>
           </section>
 
