@@ -45,41 +45,68 @@ export function HeroCarousel({ banners }: { banners: Banner[] }) {
   return (
     <Carousel setApi={setApi} opts={{ loop: true }} className="overflow-hidden rounded-2xl">
       <CarouselContent>
-        {banners.map((banner, i) => (
-          <CarouselItem key={banner.id}>
-            <div className="relative aspect-[16/9] w-full overflow-hidden sm:aspect-[21/9]">
-              <Image
-                src={banner.imageUrl}
-                alt={banner.title}
-                fill
-                priority={i === 0}
-                sizes="(max-width: 1024px) 100vw, 66vw"
-                className="object-cover"
-              />
-              <div className="absolute inset-0 bg-gradient-to-r from-black/85 via-black/55 to-black/10" />
-              <div className="absolute inset-0 flex flex-col justify-center gap-3 p-6 sm:p-10 lg:max-w-xl">
-                {banner.eyebrow && (
-                  <span className="w-fit rounded-full bg-primary/15 px-3 py-1 text-xs font-semibold uppercase tracking-wider text-primary ring-1 ring-primary/30">
-                    {banner.eyebrow}
-                  </span>
+        {banners.map((banner, i) => {
+          // Artwork with its own baked-in headline (no eyebrow/subtitle/button
+          // label) renders clean — no dark gradient, no overlaid text. The whole
+          // slide is still a link when a destination is set.
+          const hasOverlayText = Boolean(banner.eyebrow || banner.subtitle || banner.ctaLabel);
+          const image = (
+            <Image
+              src={banner.imageUrl}
+              alt={banner.title}
+              fill
+              priority={i === 0}
+              sizes="(max-width: 1024px) 100vw, 66vw"
+              className="object-cover"
+            />
+          );
+
+          return (
+            <CarouselItem key={banner.id}>
+              <div className="relative aspect-[16/9] w-full overflow-hidden sm:aspect-[21/9]">
+                {!hasOverlayText && banner.ctaHref ? (
+                  <Link
+                    href={banner.ctaHref}
+                    aria-label={banner.title}
+                    className="absolute inset-0"
+                  >
+                    {image}
+                  </Link>
+                ) : (
+                  image
                 )}
-                <h1 className="text-3xl font-bold leading-tight text-white drop-shadow sm:text-5xl">
-                  {banner.title}
-                </h1>
-                {banner.subtitle && (
-                  <p className="max-w-md text-sm text-white/80 sm:text-base">{banner.subtitle}</p>
-                )}
-                {banner.ctaHref && (
-                  <div className="mt-2">
-                    <Button asChild size="lg" rightIcon={<ArrowRight />}>
-                      <Link href={banner.ctaHref}>{banner.ctaLabel ?? "Explore"}</Link>
-                    </Button>
-                  </div>
+
+                {hasOverlayText && (
+                  <>
+                    <div className="absolute inset-0 bg-gradient-to-r from-black/85 via-black/55 to-black/10" />
+                    <div className="absolute inset-0 flex flex-col justify-center gap-3 p-6 sm:p-10 lg:max-w-xl">
+                      {banner.eyebrow && (
+                        <span className="w-fit rounded-full bg-primary/15 px-3 py-1 text-xs font-semibold tracking-wider text-primary uppercase ring-1 ring-primary/30">
+                          {banner.eyebrow}
+                        </span>
+                      )}
+                      <h1 className="text-3xl leading-tight font-bold text-white drop-shadow sm:text-5xl">
+                        {banner.title}
+                      </h1>
+                      {banner.subtitle && (
+                        <p className="max-w-md text-sm text-white/80 sm:text-base">
+                          {banner.subtitle}
+                        </p>
+                      )}
+                      {banner.ctaHref && (
+                        <div className="mt-2">
+                          <Button asChild size="lg" rightIcon={<ArrowRight />}>
+                            <Link href={banner.ctaHref}>{banner.ctaLabel ?? "Explore"}</Link>
+                          </Button>
+                        </div>
+                      )}
+                    </div>
+                  </>
                 )}
               </div>
-            </div>
-          </CarouselItem>
-        ))}
+            </CarouselItem>
+          );
+        })}
       </CarouselContent>
 
       <CarouselPrevious className="left-3 border-white/20 bg-black/40 text-white hover:bg-black/60 hover:text-white" />

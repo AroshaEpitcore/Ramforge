@@ -2,36 +2,35 @@ import type { Banner, BlogPost, Review } from "@/types";
 
 const img = (seed: string, w = 1280, h = 720) => `https://picsum.photos/seed/${seed}/${w}/${h}`;
 
+// Image-only hero slides: the headline/CTA are baked into the artwork, so these
+// carry no eyebrow/subtitle/ctaLabel (the carousel then renders them clean).
 export const mockBanners: Banner[] = [
   {
-    id: "ban_nuke",
-    eyebrow: "Featured series",
-    title: "Foundry Nuke",
-    subtitle: "Step-by-step tutorials, real-world projects, tools and assets for VFX artists.",
-    imageUrl: "https://images2.alphacoders.com/139/thumb-1920-1398993.jpg",
-    ctaLabel: "Start learning",
-    ctaHref: "/shop?category=compositing",
+    id: "ban_hero_1",
+    title: "Flat 25% off — Nuke 12.2 Sinhala tutorials",
+    imageUrl: "/hero-1.jpg",
+    ctaHref: "/shop",
     active: true,
   },
   {
-    id: "ban_houdini",
-    eyebrow: "New this month",
-    title: "Houdini FX Complete",
-    subtitle: "From first principles to production-ready pyro and destruction.",
-    imageUrl:
-      "https://w0.peakpx.com/wallpaper/758/551/HD-wallpaper-warface-breakout-2020-warface-breakout-warface-2020-games-games-ps-games-xbox-one-games-ps4-games.jpg",
-    ctaLabel: "Explore the bundle",
-    ctaHref: "/bundles/houdini-fx-complete",
+    id: "ban_hero_2",
+    title: "Every great artist begins with a dream",
+    imageUrl: "/hero-2.jpg",
+    ctaHref: "/shop",
     active: true,
   },
   {
-    id: "ban_color",
-    eyebrow: "Staff pick",
-    title: "Cinematic Color",
-    subtitle: "Grade like the pros with our DaVinci Resolve collection.",
-    imageUrl: "https://4kwallpapers.com/images/wallpapers/deathstroke-suicide-1920x1080-20151.jpg",
-    ctaLabel: "Browse color grading",
-    ctaHref: "/shop?category=color-grading",
+    id: "ban_hero_3",
+    title: "Turn your imagination into reality",
+    imageUrl: "/hero-3.jpg",
+    ctaHref: "/shop",
+    active: true,
+  },
+  {
+    id: "ban_hero_4",
+    title: "Unleash the power of compositing",
+    imageUrl: "/hero-4.jpg",
+    ctaHref: "/shop",
     active: true,
   },
 ];

@@ -72,6 +72,24 @@ export async function putObject(input: {
   );
 }
 
+/**
+ * Read an object back out as a web stream, for serving it through an app route
+ * (works whether the bucket is public_read or private — we use credentials).
+ */
+export async function getObjectStream(key: string): Promise<{
+  body: ReadableStream;
+  contentType?: string;
+  contentLength?: number;
+}> {
+  const res = await getStorageClient().send(
+    new GetObjectCommand({ Bucket: STORAGE_BUCKET, Key: key }),
+  );
+  if (!res.Body) throw new Error(`Object has no body: ${key}`);
+  // In the Node runtime the SDK stream exposes `transformToWebStream`.
+  const body = (res.Body as { transformToWebStream: () => ReadableStream }).transformToWebStream();
+  return { body, contentType: res.ContentType, contentLength: res.ContentLength };
+}
+
 /** Presigned GET URL — share a private object without exposing credentials. */
 export function presignDownloadUrl(key: string, expiresIn = 3600): Promise<string> {
   return getSignedUrl(

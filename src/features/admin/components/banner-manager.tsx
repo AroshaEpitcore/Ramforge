@@ -22,6 +22,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
+import { BannerImageField } from "@/features/admin/components/banner-image-field";
 import { deleteBanner, saveBanner } from "@/features/admin/marketing-actions";
 import { bannerSchema, type BannerInput } from "@/features/admin/schemas";
 import type { AdminBannerRow } from "@/server/queries/marketing";
@@ -204,7 +205,17 @@ function BannerFormDialog({
           {field("eyebrow", "Eyebrow (optional)", "NEW")}
           {field("title", "Title")}
           {field("subtitle", "Subtitle (optional)")}
-          {field("imageUrl", "Image URL", "https://…")}
+          <Controller
+            control={control}
+            name="imageUrl"
+            render={({ field: f }) => (
+              <BannerImageField
+                value={f.value ?? ""}
+                onChange={f.onChange}
+                error={errors.imageUrl?.message as string | undefined}
+              />
+            )}
+          />
           <div className="grid gap-4 sm:grid-cols-2">
             {field("ctaLabel", "Button label (optional)")}
             {field("ctaHref", "Button link (optional)", "/shop")}

@@ -114,7 +114,16 @@ export const bannerSchema = z.object({
   title: z.string().trim().min(2, "Enter a title").max(120),
   subtitle: z.string().trim().max(200).optional(),
   eyebrow: z.string().trim().max(60).optional(),
-  imageUrl: z.string().trim().url("Enter an image URL"),
+  // Accepts a full URL (pasted) OR a site-relative path like "/hero-1.jpg" or an
+  // uploaded "/api/assets/…" path.
+  imageUrl: z
+    .string()
+    .trim()
+    .min(1, "Add an image")
+    .refine(
+      (v) => v.startsWith("/") || /^https?:\/\//i.test(v),
+      "Upload an image or paste an image URL",
+    ),
   ctaLabel: z.string().trim().max(40).optional(),
   ctaHref: z.string().trim().max(200).optional(),
   position: z.number().int().min(0).max(999),

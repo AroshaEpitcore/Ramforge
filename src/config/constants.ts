@@ -21,6 +21,16 @@ export const MAX_VIDEO_UPLOAD_BYTES = 10 * 1024 * 1024 * 1024; // 10 GB
 /** Accepted source video MIME type prefixes for uploads. */
 export const ACCEPTED_VIDEO_MIME_PREFIX = "video/";
 
+/**
+ * Maximum accepted banner/marketing image upload size (bytes). Kept under
+ * Vercel's ~4.5 MB serverless request-body limit so uploads post directly to a
+ * route handler without streaming infrastructure.
+ */
+export const MAX_IMAGE_UPLOAD_BYTES = 4 * 1024 * 1024; // 4 MB
+
+/** Accepted image MIME type prefix for uploads. */
+export const ACCEPTED_IMAGE_MIME_PREFIX = "image/";
+
 export const PAGE_SIZE = 12;
 export const PAGE_SIZE_OPTIONS = [12, 24, 48] as const;
 
