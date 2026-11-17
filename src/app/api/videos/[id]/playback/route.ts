@@ -77,6 +77,11 @@ export async function GET(_req: Request, { params }: { params: Promise<{ id: str
   if (!video.fullAssetId) {
     return NextResponse.json({ error: "Video is still processing." }, { status: 409 });
   }
+  // Self-hosted objects stored in our bucket (e.g. sample/demo clips) are served
+  // straight from storage via /api/assets, independent of the Mux provider.
+  if (video.fullAssetId.startsWith("samples/")) {
+    return NextResponse.json({ source: "mux", url: `/api/assets/${video.fullAssetId}` });
+  }
   try {
     const signed = await getVideoProvider().getPlaybackUrl(video.fullAssetId);
     return NextResponse.json({ source: "mux", url: signed.url, expiresAt: signed.expiresAt });
