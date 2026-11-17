@@ -409,16 +409,18 @@ model Favourite {
 }
 
 model Review {
-  id        String   @id @default(cuid())
-  videoId   String
-  video     Video    @relation(fields: [videoId], references: [id], onDelete: Cascade)
-  userId    String
-  user      User     @relation(fields: [userId], references: [id])
-  rating    Int
-  title     String?
-  body      String
-  approved  Boolean  @default(false)
-  createdAt DateTime @default(now())
+  id         String   @id @default(cuid())
+  videoId    String
+  video      Video    @relation(fields: [videoId], references: [id], onDelete: Cascade)
+  // Optional: signed-in reviews link a user; anonymous reviews store a name.
+  userId     String?
+  user       User?    @relation(fields: [userId], references: [id])
+  authorName String?
+  rating     Int
+  title      String?
+  body       String
+  approved   Boolean  @default(true)
+  createdAt  DateTime @default(now())
 
   @@unique([videoId, userId])
   @@index([videoId])

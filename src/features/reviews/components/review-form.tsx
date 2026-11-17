@@ -15,13 +15,17 @@ import { toast } from "sonner";
 export function ReviewForm({
   videoId,
   existing,
+  signedIn = true,
 }: {
   videoId: string;
   existing?: { rating: number; title: string | null; body: string; approved: boolean } | null;
+  /** When false, show a name field (anonymous reviewer). */
+  signedIn?: boolean;
 }) {
   const router = useRouter();
   const [rating, setRating] = useState(existing?.rating ?? 0);
   const [hover, setHover] = useState(0);
+  const [name, setName] = useState("");
   const [title, setTitle] = useState(existing?.title ?? "");
   const [body, setBody] = useState(existing?.body ?? "");
   const [error, setError] = useState<string | null>(null);
@@ -29,7 +33,7 @@ export function ReviewForm({
 
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const parsed = reviewSchema.safeParse({ videoId, rating, title, body });
+    const parsed = reviewSchema.safeParse({ videoId, rating, title, body, name });
     if (!parsed.success) {
       setError(parsed.error.issues[0]?.message ?? "Please check your review.");
       return;
@@ -43,7 +47,13 @@ export function ReviewForm({
       toast.error("Could not submit review", { description: res.error });
       return;
     }
-    toast.success("Review submitted", { description: "It will appear once approved." });
+    toast.success("Review posted");
+    if (!signedIn) {
+      setRating(0);
+      setName("");
+      setTitle("");
+      setBody("");
+    }
     router.refresh();
   };
 
@@ -76,6 +86,18 @@ export function ReviewForm({
         ))}
       </div>
 
+      {!signedIn && (
+        <div className="grid gap-1.5">
+          <Label htmlFor="r-name">Your name (optional)</Label>
+          <Input
+            id="r-name"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            maxLength={60}
+            placeholder="Anonymous"
+          />
+        </div>
+      )}
       <div className="grid gap-1.5">
         <Label htmlFor="r-title">Title (optional)</Label>
         <Input

@@ -13,9 +13,10 @@ function fail(error: string, fieldErrors?: Record<string, string[]>): ActionResu
 }
 
 /**
- * Submit (or update) a review for a video. Reviews publish immediately (no
- * moderation queue — like YouTube comments); staff can still remove abusive
- * ones from Admin → Reviews.
+ * Submit a review for a video. Anyone can review (no sign-in required, like
+ * YouTube-style comments) and reviews publish immediately — staff can still
+ * remove abusive ones from Admin → Reviews. Signed-in users get one editable
+ * review per video; anonymous reviews are added each time with a display name.
  */
 export async function submitReview(raw: unknown): Promise<ActionResult> {
   const parsed = reviewSchema.safeParse(raw);
@@ -25,13 +26,14 @@ export async function submitReview(raw: unknown): Promise<ActionResult> {
       z.flattenError(parsed.error).fieldErrors as Record<string, string[]>,
     );
   }
-  const { videoId, rating, title, body } = parsed.data;
+  const { videoId, rating, title, body, name } = parsed.data;
 
-  let userId: string;
+  // Sign-in is optional — resolve a user if there is one, otherwise go anonymous.
+  let userId: string | null = null;
   try {
     userId = (await requireCurrentUser()).id;
   } catch {
-    return fail("Please sign in to leave a review.");
+    userId = null;
   }
 
   try {
@@ -41,11 +43,26 @@ export async function submitReview(raw: unknown): Promise<ActionResult> {
     });
     if (!video || video.status !== "PUBLISHED") return fail("Video not found.");
 
-    await db.review.upsert({
-      where: { videoId_userId: { videoId, userId } },
-      update: { rating, title: title ?? null, body, approved: true },
-      create: { videoId, userId, rating, title: title ?? null, body, approved: true },
-    });
+    if (userId) {
+      // One editable review per signed-in user.
+      await db.review.upsert({
+        where: { videoId_userId: { videoId, userId } },
+        update: { rating, title: title ?? null, body, approved: true },
+        create: { videoId, userId, rating, title: title ?? null, body, approved: true },
+      });
+    } else {
+      // Anonymous review — store the display name (defaults to "Anonymous").
+      await db.review.create({
+        data: {
+          videoId,
+          rating,
+          title: title ?? null,
+          body,
+          authorName: name?.trim() || "Anonymous",
+          approved: true,
+        },
+      });
+    }
 
     revalidatePath(`/video/${video.slug}`);
     revalidatePath("/admin/reviews");

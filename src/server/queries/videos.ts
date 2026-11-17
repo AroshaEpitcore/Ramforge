@@ -212,6 +212,7 @@ export async function listApprovedReviews(videoId: string) {
       title: true,
       body: true,
       createdAt: true,
+      authorName: true,
       user: { select: { name: true, image: true } },
     },
   });
@@ -220,7 +221,10 @@ export async function listApprovedReviews(videoId: string) {
     rating: r.rating,
     title: r.title ?? undefined,
     body: r.body,
-    author: { name: r.user.name ?? "Customer", avatarUrl: r.user.image ?? undefined },
+    author: {
+      name: r.user?.name ?? r.authorName ?? "Anonymous",
+      avatarUrl: r.user?.image ?? undefined,
+    },
     createdAt: r.createdAt.toISOString(),
   }));
 }

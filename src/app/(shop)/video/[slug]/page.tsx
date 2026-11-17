@@ -143,16 +143,7 @@ export default async function VideoDetailsPage({ params }: { params: Promise<{ s
               </div>
             )}
 
-            {user ? (
-              <ReviewForm videoId={video.id} existing={existingReview} />
-            ) : (
-              <p className="text-sm text-muted-foreground">
-                <Link href="/login" className="text-primary underline-offset-4 hover:underline">
-                  Sign in
-                </Link>{" "}
-                to leave a review.
-              </p>
-            )}
+            <ReviewForm videoId={video.id} existing={existingReview} signedIn={Boolean(user)} />
           </section>
         </div>
 
