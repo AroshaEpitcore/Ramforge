@@ -26,10 +26,13 @@ export function PlaybackPlayer({
   videoId,
   poster,
   title,
+  autoPlay,
 }: {
   videoId: string;
   poster?: string;
   title?: string;
+  /** Begin playback as soon as the source resolves (after a click-to-play). */
+  autoPlay?: boolean;
 }) {
   const [resolved, setResolved] = useState<Resolved | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -77,6 +80,7 @@ export function PlaybackPlayer({
     <VideoPlayer
       source={{ src: resolved?.kind === "mux" ? resolved.url : undefined, poster }}
       title={title}
+      autoPlay={autoPlay}
     />
   );
 }

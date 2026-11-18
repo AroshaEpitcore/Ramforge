@@ -90,9 +90,12 @@ export function CoursePlayer({
     </li>
   );
 
-  // For a paid, owned lesson, fetch a signed playback source.
+  // Resolve a playback source. Free YouTube lessons embed directly (no fetch);
+  // free self-hosted lessons and paid owned lessons fetch a signed/served source.
   useEffect(() => {
-    if (!active || active.free || !owned) {
+    const needsSource = active && !(active.free && active.source === "YOUTUBE");
+    const allowed = active?.free || owned;
+    if (!active || !needsSource || !allowed) {
       setPlayback(null);
       return;
     }
@@ -310,14 +313,17 @@ function LessonStage({
     );
   }
 
-  // Free lesson → YouTube embed.
+  // Free lesson → YouTube embed, or a self-hosted source once resolved.
   if (lesson.free) {
     if (lesson.source === "YOUTUBE" && lesson.youtubeId) {
       return <YouTubeEmbed youtubeId={lesson.youtubeId} title={lesson.title} />;
     }
+    if (playback?.youtubeId)
+      return <YouTubeEmbed youtubeId={playback.youtubeId} title={lesson.title} />;
+    if (playback?.url) return <VideoPlayer source={{ src: playback.url }} title={lesson.title} />;
     return (
-      <div className="flex aspect-video w-full items-center justify-center rounded-xl border bg-black text-white/70">
-        This free lesson is being prepared.
+      <div className="flex aspect-video w-full items-center justify-center rounded-xl border bg-black text-white/60">
+        Loading…
       </div>
     );
   }

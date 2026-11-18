@@ -21,7 +21,7 @@ export function PreviewPlayer({
   const [playing, setPlaying] = useState(false);
 
   if (playing) {
-    return <PlaybackPlayer videoId={videoId} poster={poster} title={title} />;
+    return <PlaybackPlayer videoId={videoId} poster={poster} title={title} autoPlay />;
   }
 
   return (

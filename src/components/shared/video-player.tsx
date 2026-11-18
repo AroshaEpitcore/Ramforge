@@ -21,6 +21,8 @@ export interface VideoPlayerProps {
   className?: string;
   /** Marks this as a free preview/trailer rather than the full asset. */
   isPreview?: boolean;
+  /** Start playing as soon as the source is ready (e.g. after a click-to-play). */
+  autoPlay?: boolean;
 }
 
 /**
@@ -31,7 +33,7 @@ export interface VideoPlayerProps {
  *
  * With no `source.src` (e.g. a paid preview before purchase) it shows the poster.
  */
-export function VideoPlayer({ source, title, className, isPreview }: VideoPlayerProps) {
+export function VideoPlayer({ source, title, className, isPreview, autoPlay }: VideoPlayerProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
 
   useEffect(() => {
@@ -39,10 +41,14 @@ export function VideoPlayer({ source, title, className, isPreview }: VideoPlayer
     if (!el || !source.src) return;
     const src = source.src;
     const isHls = src.includes(".m3u8");
+    const tryPlay = () => {
+      if (autoPlay) void el.play().catch(() => {});
+    };
 
     // Non-HLS (e.g. MP4) plays natively.
     if (!isHls) {
       el.src = src;
+      tryPlay();
       return;
     }
 
@@ -59,16 +65,18 @@ export function VideoPlayer({ source, title, className, isPreview }: VideoPlayer
         const hls = new Hls();
         hls.loadSource(src);
         hls.attachMedia(video);
+        hls.on(Hls.Events.MANIFEST_PARSED, tryPlay);
         destroy = () => hls.destroy();
       } else if (video.canPlayType("application/vnd.apple.mpegurl")) {
         video.src = src;
+        tryPlay();
       }
     });
     return () => {
       cancelled = true;
       destroy?.();
     };
-  }, [source.src]);
+  }, [source.src, autoPlay]);
 
   // Placeholder (no real source yet, e.g. a paid preview): poster.
   if (!source.src) {
@@ -115,6 +123,7 @@ export function VideoPlayer({ source, title, className, isPreview }: VideoPlayer
         ref={videoRef}
         poster={source.poster}
         controls
+        autoPlay={autoPlay}
         controlsList="nodownload"
         playsInline
         className="absolute inset-0 size-full object-contain"
