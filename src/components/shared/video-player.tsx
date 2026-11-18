@@ -35,13 +35,16 @@ export interface VideoPlayerProps {
  */
 export function VideoPlayer({ source, title, className, isPreview, autoPlay }: VideoPlayerProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
-  // Track play state to show a prominent center play button while paused.
+  // `playing` toggles the center play button; `hasStarted` reveals the native
+  // controls (hidden on the clean poster until the video is first played).
   const [playing, setPlaying] = useState(false);
+  const [hasStarted, setHasStarted] = useState(false);
 
   useEffect(() => {
     const el = videoRef.current;
     if (!el || !source.src) return;
     setPlaying(false);
+    setHasStarted(false);
     const src = source.src;
     const isHls = src.includes(".m3u8");
     const tryPlay = () => {
@@ -125,26 +128,32 @@ export function VideoPlayer({ source, title, className, isPreview, autoPlay }: V
       <video
         ref={videoRef}
         poster={source.poster}
-        controls
+        controls={hasStarted}
         autoPlay={autoPlay}
         controlsList="nodownload"
         playsInline
-        onPlay={() => setPlaying(true)}
+        onPlay={() => {
+          setPlaying(true);
+          setHasStarted(true);
+        }}
         onPlaying={() => setPlaying(true)}
         onPause={() => setPlaying(false)}
         onEnded={() => setPlaying(false)}
         className="absolute inset-0 size-full object-contain"
       />
-      {/* Prominent center play button while paused (native controls stay usable). */}
+      {/* Prominent, pulsing center play button while paused. */}
       {!playing && (
         <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
           <button
             type="button"
             onClick={() => void videoRef.current?.play()?.catch(() => {})}
             aria-label={`Play ${title ?? "video"}`}
-            className="pointer-events-auto flex size-16 items-center justify-center rounded-full bg-primary/90 text-primary-foreground shadow-xl ring-2 ring-white/40 transition-transform hover:scale-105"
+            className="pointer-events-auto relative flex size-16 items-center justify-center transition-transform hover:scale-105"
           >
-            <Play className="size-7 translate-x-0.5 fill-current" />
+            <span className="absolute inline-flex size-full animate-ping rounded-full bg-primary/50" />
+            <span className="relative flex size-16 items-center justify-center rounded-full bg-primary/90 text-primary-foreground shadow-xl ring-2 ring-white/40">
+              <Play className="size-7 translate-x-0.5 fill-current" />
+            </span>
           </button>
         </div>
       )}
