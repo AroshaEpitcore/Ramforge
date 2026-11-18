@@ -387,7 +387,7 @@ model WatchSession {
   userId        String
   user          User      @relation(fields: [userId], references: [id])
   videoId       String
-  video         Video     @relation(fields: [videoId], references: [id])
+  video         Video     @relation(fields: [videoId], references: [id], onDelete: Cascade)
   deviceLabel   String?
   ipHash        String?
   lastHeartbeat DateTime  @default(now())
