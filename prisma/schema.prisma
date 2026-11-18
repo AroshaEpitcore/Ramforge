@@ -358,7 +358,9 @@ model Purchase {
   userId   String
   user     User    @relation("UserPurchases", fields: [userId], references: [id])
   videoId  String?
-  video    Video?  @relation(fields: [videoId], references: [id])
+  // Cascade: deleting a video removes its entitlement rows (the xor check
+  // forbids simply nulling videoId). The financial Order/OrderItem is kept.
+  video    Video?  @relation(fields: [videoId], references: [id], onDelete: Cascade)
   courseId String?
   course   Course? @relation(fields: [courseId], references: [id])
   orderId  String?
