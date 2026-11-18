@@ -2,7 +2,7 @@
 
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
-import { Loader2, Play } from "lucide-react";
+import { Play } from "lucide-react";
 import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
 
@@ -35,13 +35,13 @@ export interface VideoPlayerProps {
  */
 export function VideoPlayer({ source, title, className, isPreview, autoPlay }: VideoPlayerProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
-  // Show a spinner from the moment there's a source until playback actually starts.
-  const [started, setStarted] = useState(false);
+  // Track play state to show a prominent center play button while paused.
+  const [playing, setPlaying] = useState(false);
 
   useEffect(() => {
     const el = videoRef.current;
     if (!el || !source.src) return;
-    setStarted(false);
+    setPlaying(false);
     const src = source.src;
     const isHls = src.includes(".m3u8");
     const tryPlay = () => {
@@ -129,15 +129,23 @@ export function VideoPlayer({ source, title, className, isPreview, autoPlay }: V
         autoPlay={autoPlay}
         controlsList="nodownload"
         playsInline
-        // Clear the spinner once the video is ready or playing, so the native
-        // play button shows if autoplay was blocked.
-        onCanPlay={() => setStarted(true)}
-        onPlaying={() => setStarted(true)}
+        onPlay={() => setPlaying(true)}
+        onPlaying={() => setPlaying(true)}
+        onPause={() => setPlaying(false)}
+        onEnded={() => setPlaying(false)}
         className="absolute inset-0 size-full object-contain"
       />
-      {autoPlay && !started && (
-        <div className="pointer-events-none absolute inset-0 flex items-center justify-center bg-black/40">
-          <Loader2 className="size-10 animate-spin text-white/90" />
+      {/* Prominent center play button while paused (native controls stay usable). */}
+      {!playing && (
+        <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
+          <button
+            type="button"
+            onClick={() => void videoRef.current?.play()?.catch(() => {})}
+            aria-label={`Play ${title ?? "video"}`}
+            className="pointer-events-auto flex size-16 items-center justify-center rounded-full bg-primary/90 text-primary-foreground shadow-xl ring-2 ring-white/40 transition-transform hover:scale-105"
+          >
+            <Play className="size-7 translate-x-0.5 fill-current" />
+          </button>
         </div>
       )}
     </div>
