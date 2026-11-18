@@ -129,6 +129,9 @@ export function VideoPlayer({ source, title, className, isPreview, autoPlay }: V
         autoPlay={autoPlay}
         controlsList="nodownload"
         playsInline
+        // Clear the spinner once the video is ready or playing, so the native
+        // play button shows if autoplay was blocked.
+        onCanPlay={() => setStarted(true)}
         onPlaying={() => setStarted(true)}
         className="absolute inset-0 size-full object-contain"
       />
