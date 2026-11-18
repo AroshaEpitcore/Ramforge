@@ -2,9 +2,9 @@
 
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
-import { Play } from "lucide-react";
+import { Loader2, Play } from "lucide-react";
 import Image from "next/image";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 
 export interface PlaybackSource {
   /** Direct media URL (provider resolves a signed, expiring URL at runtime). */
@@ -35,10 +35,13 @@ export interface VideoPlayerProps {
  */
 export function VideoPlayer({ source, title, className, isPreview, autoPlay }: VideoPlayerProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
+  // Show a spinner from the moment there's a source until playback actually starts.
+  const [started, setStarted] = useState(false);
 
   useEffect(() => {
     const el = videoRef.current;
     if (!el || !source.src) return;
+    setStarted(false);
     const src = source.src;
     const isHls = src.includes(".m3u8");
     const tryPlay = () => {
@@ -126,8 +129,14 @@ export function VideoPlayer({ source, title, className, isPreview, autoPlay }: V
         autoPlay={autoPlay}
         controlsList="nodownload"
         playsInline
+        onPlaying={() => setStarted(true)}
         className="absolute inset-0 size-full object-contain"
       />
+      {autoPlay && !started && (
+        <div className="pointer-events-none absolute inset-0 flex items-center justify-center bg-black/40">
+          <Loader2 className="size-10 animate-spin text-white/90" />
+        </div>
+      )}
     </div>
   );
 }

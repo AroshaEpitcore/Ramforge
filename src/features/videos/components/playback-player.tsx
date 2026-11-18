@@ -2,6 +2,8 @@
 
 import { VideoPlayer } from "@/components/shared/video-player";
 import { YouTubeEmbed } from "@/components/shared/youtube-embed";
+import { Loader2 } from "lucide-react";
+import Image from "next/image";
 import { useEffect, useState } from "react";
 
 interface PlaybackResponse {
@@ -70,17 +72,31 @@ export function PlaybackPlayer({
     );
   }
 
-  if (resolved?.kind === "youtube") {
+  // Resolving the source — show the poster with a spinner (not a dead play icon).
+  if (!resolved) {
+    return (
+      <div className="relative aspect-video w-full overflow-hidden rounded-xl bg-black">
+        {poster && (
+          <Image
+            src={poster}
+            alt={title ?? "Video"}
+            fill
+            sizes="100vw"
+            className="object-cover opacity-70"
+          />
+        )}
+        <div className="absolute inset-0 flex items-center justify-center bg-black/40">
+          <Loader2 className="size-10 animate-spin text-white/90" />
+        </div>
+      </div>
+    );
+  }
+
+  if (resolved.kind === "youtube") {
     return <YouTubeEmbed youtubeId={resolved.youtubeId} title={title} />;
   }
 
   // Self-hosted video once resolved; the same component shows the poster while
   // the signed URL is still being fetched (source.src undefined).
-  return (
-    <VideoPlayer
-      source={{ src: resolved?.kind === "mux" ? resolved.url : undefined, poster }}
-      title={title}
-      autoPlay={autoPlay}
-    />
-  );
+  return <VideoPlayer source={{ src: resolved.url, poster }} title={title} autoPlay={autoPlay} />;
 }
