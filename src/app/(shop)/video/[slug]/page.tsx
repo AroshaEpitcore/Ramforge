@@ -74,7 +74,11 @@ export default async function VideoDetailsPage({ params }: { params: Promise<{ s
               height never exceeds the viewport below the navbar. */}
           <div className="w-full max-w-[calc((100dvh_-_6rem)*16/9)]">
             {isFree && video.source === "YOUTUBE" && video.youtubeId ? (
-              <YouTubeEmbed youtubeId={video.youtubeId} title={video.title} />
+              <YouTubeEmbed
+                youtubeId={video.youtubeId}
+                title={video.title}
+                poster={video.thumbnailUrl || undefined}
+              />
             ) : isFree ? (
               <PlaybackPlayer
                 videoId={video.id}
