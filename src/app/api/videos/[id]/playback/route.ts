@@ -3,7 +3,6 @@ import { getVideoProvider } from "@/lib/video";
 import { getCurrentUser } from "@/server/current-user";
 import { db } from "@/server/db";
 import { resolveVideoAccess, type OwnedEntitlement } from "@/server/services/entitlements";
-import { isPaymentsEnabled } from "@/server/services/settings";
 import { NextResponse } from "next/server";
 
 /**
@@ -32,10 +31,9 @@ export async function GET(_req: Request, { params }: { params: Promise<{ id: str
     return NextResponse.json({ error: "Not found" }, { status: 404 });
   }
 
-  // While payments are off (free-launch mode), paid videos are open to everyone.
-  // Once payments are enabled, the full paywall (sign-in + entitlement) applies.
-  const paymentsOn = await isPaymentsEnabled();
-  if (video.accessMode !== "FREE" && paymentsOn) {
+  // Paid videos require sign-in + a matching entitlement (purchase). They stay
+  // locked for everyone else, regardless of the payments launch switch.
+  if (video.accessMode !== "FREE") {
     const user = await getCurrentUser();
     if (!user) return NextResponse.json({ error: "Authentication required." }, { status: 401 });
 

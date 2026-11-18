@@ -2,6 +2,7 @@ import { Container } from "@/components/layout/container";
 import { JsonLd } from "@/components/shared/json-ld";
 import { SidebarPromo } from "@/components/shared/sidebar-promo";
 import { VideoGrid } from "@/components/shared/video-grid";
+import { VideoPlayer } from "@/components/shared/video-player";
 import { YouTubeEmbed } from "@/components/shared/youtube-embed";
 import { Badge } from "@/components/ui/badge";
 import { Duration } from "@/components/ui/duration";
@@ -80,11 +81,19 @@ export default async function VideoDetailsPage({ params }: { params: Promise<{ s
                 poster={video.thumbnailUrl || undefined}
                 title={video.title}
               />
-            ) : (
+            ) : owned ? (
+              // Paid + owned: click-to-play the real source.
               <PreviewPlayer
                 videoId={video.id}
                 poster={video.thumbnailUrl || undefined}
                 title={video.title}
+              />
+            ) : (
+              // Paid + not owned: locked preview poster (purchase via the sidebar).
+              <VideoPlayer
+                source={{ poster: video.thumbnailUrl || undefined }}
+                title={video.title}
+                isPreview
               />
             )}
           </div>
