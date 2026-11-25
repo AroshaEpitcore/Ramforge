@@ -31,6 +31,7 @@ import {
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { deleteBundle, saveBundle } from "@/features/admin/bundle-actions";
+import { ImageUploadField } from "@/features/admin/components/image-upload-field";
 import { formatCurrency } from "@/lib/formatters";
 import type { AdminBundleRow } from "@/server/queries/bundles";
 import type { ColumnDef } from "@tanstack/react-table";
@@ -249,30 +250,29 @@ function BundleFormDialog({
               onChange={(e) => setDescription(e.target.value)}
             />
           </div>
-          <div className="grid gap-4 sm:grid-cols-2">
-            <div className="grid gap-2">
-              <Label htmlFor="bn-thumb">Thumbnail URL (optional)</Label>
-              <Input
-                id="bn-thumb"
-                placeholder="https://…"
-                value={thumbnailUrl}
-                onChange={(e) => setThumbnailUrl(e.target.value)}
-              />
-            </div>
-            <div className="grid gap-2">
-              <Label>Status</Label>
-              <Select value={status} onValueChange={(v) => setStatus(v as Status)}>
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="DRAFT">Draft</SelectItem>
-                  <SelectItem value="PUBLISHED">Published</SelectItem>
-                  <SelectItem value="ARCHIVED">Archived</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
+          <div className="grid gap-2 sm:max-w-xs">
+            <Label>Status</Label>
+            <Select value={status} onValueChange={(v) => setStatus(v as Status)}>
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="DRAFT">Draft</SelectItem>
+                <SelectItem value="PUBLISHED">Published</SelectItem>
+                <SelectItem value="ARCHIVED">Archived</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
+
+          <ImageUploadField
+            value={thumbnailUrl}
+            onChange={setThumbnailUrl}
+            folder="thumbnails"
+            label="Thumbnail (optional)"
+            allowUrl
+            previewClassName="aspect-video h-auto"
+            hint="The cover shown on the bundle tile — 16:9 works best (e.g. 1280×720 px)."
+          />
 
           <div className="grid gap-2">
             <Label>Videos in this bundle ({selected.length})</Label>
