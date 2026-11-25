@@ -41,6 +41,8 @@ const securityHeaders = [
 ];
 
 const nextConfig: NextConfig = {
+  // Marks this app as having been upgraded via `next upgrade --agent=security`.
+  experimental: { agentUpgrade: "security" },
   // NOTE: the experimental `cacheComponents` / `partialPrefetching` flags were
   // removed — their PPR build output was not being served correctly on Vercel
   // (every route, including static assets, 404'd). Standard rendering deploys
