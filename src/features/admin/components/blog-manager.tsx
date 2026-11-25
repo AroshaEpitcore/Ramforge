@@ -41,7 +41,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import type { ColumnDef } from "@tanstack/react-table";
 import { Pencil, Plus, Trash2 } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { toast } from "sonner";
 
@@ -176,26 +176,37 @@ function BlogFormDialog({
   editing: AdminBlogPostRow | null;
   onSaved: () => void;
 }) {
+  const defaults: BlogPostInput = {
+    id: editing?.id,
+    title: editing?.title ?? "",
+    slug: editing?.slug ?? "",
+    excerpt: editing?.excerpt ?? "",
+    body: editing?.body ?? "",
+    coverImageUrl: editing?.coverImageUrl ?? "",
+    pdfUrl: editing?.pdfUrl ?? "",
+    status: editing?.status ?? "DRAFT",
+    publishAt: editing?.publishAt ? editing.publishAt.slice(0, 16) : "",
+  };
+
   const {
     register,
     handleSubmit,
     control,
     setError,
+    reset,
     formState: { errors, isSubmitting },
   } = useForm<BlogPostInput>({
     resolver: zodResolver(blogPostSchema),
-    defaultValues: {
-      id: editing?.id,
-      title: editing?.title ?? "",
-      slug: editing?.slug ?? "",
-      excerpt: editing?.excerpt ?? "",
-      body: editing?.body ?? "",
-      coverImageUrl: editing?.coverImageUrl ?? "",
-      pdfUrl: editing?.pdfUrl ?? "",
-      status: editing?.status ?? "DRAFT",
-      publishAt: editing?.publishAt ? editing.publishAt.slice(0, 16) : "",
-    },
+    defaultValues: defaults,
   });
+
+  // The dialog stays mounted between opens, so reset to the saved values every
+  // time it opens — otherwise unsaved edits (e.g. a removed PDF) linger and make
+  // it look as though a change was persisted when the user never clicked Save.
+  useEffect(() => {
+    if (open) reset(defaults);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- reset to saved row on open
+  }, [open, editing?.id]);
 
   const onSubmit = async (values: BlogPostInput) => {
     const res = await saveBlogPost(values);

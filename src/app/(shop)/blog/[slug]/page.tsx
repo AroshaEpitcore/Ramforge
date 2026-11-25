@@ -69,34 +69,28 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
         )}
 
         {post.pdfUrl && (
-          <section className="space-y-3">
-            <div className="flex items-center justify-between gap-4">
-              <h2 className="flex items-center gap-2 text-lg font-semibold">
-                <FileText className="size-5 text-primary" /> Read the full article
-              </h2>
+          <section className="rounded-xl border bg-muted/30 p-5">
+            <div className="flex flex-col items-start gap-4 sm:flex-row sm:items-center sm:justify-between">
+              <div className="flex items-center gap-3">
+                <div className="flex size-11 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                  <FileText className="size-6" />
+                </div>
+                <div>
+                  <h2 className="font-semibold">Read the full article</h2>
+                  <p className="text-sm text-muted-foreground">
+                    Opens the PDF in your browser’s viewer.
+                  </p>
+                </div>
+              </div>
               <Link
                 href={post.pdfUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center gap-1.5 rounded-full border px-4 py-2 text-sm font-medium hover:bg-accent"
+                className="inline-flex shrink-0 items-center gap-1.5 rounded-full bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90"
               >
                 <Download className="size-4" /> Open PDF
               </Link>
             </div>
-            <object
-              data={post.pdfUrl}
-              type="application/pdf"
-              className="h-[80vh] w-full rounded-xl border"
-              aria-label={`${post.title} (PDF)`}
-            >
-              <p className="p-4 text-sm text-muted-foreground">
-                Your browser can’t display the PDF inline.{" "}
-                <Link href={post.pdfUrl} className="text-primary hover:underline">
-                  Open it in a new tab
-                </Link>
-                .
-              </p>
-            </object>
           </section>
         )}
       </article>
