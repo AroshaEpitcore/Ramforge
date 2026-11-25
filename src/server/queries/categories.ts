@@ -18,7 +18,7 @@ function publishedWhere(now = new Date()) {
 export async function listStorefrontCategories(): Promise<Category[]> {
   const [cats, counts] = await Promise.all([
     db.category.findMany({
-      orderBy: { name: "asc" },
+      orderBy: [{ position: "asc" }, { name: "asc" }],
       select: { id: true, name: true, slug: true, description: true, icon: true, parentId: true },
     }),
     db.video.groupBy({

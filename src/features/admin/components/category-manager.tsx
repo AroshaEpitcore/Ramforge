@@ -30,12 +30,12 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { deleteCategory, saveCategory } from "@/features/admin/actions";
+import { deleteCategory, reorderCategories, saveCategory } from "@/features/admin/actions";
 import { categorySchema, type CategoryInput } from "@/features/admin/schemas";
 import type { AdminCategoryRow } from "@/server/queries/admin";
 import { zodResolver } from "@hookform/resolvers/zod";
 import type { ColumnDef } from "@tanstack/react-table";
-import { Pencil, Plus, Trash2 } from "lucide-react";
+import { ChevronDown, ChevronUp, Pencil, Plus, Trash2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { Controller, useForm } from "react-hook-form";
@@ -54,6 +54,25 @@ export function CategoryManager({
   const [formOpen, setFormOpen] = useState(false);
   const [editing, setEditing] = useState<AdminCategoryRow | null>(null);
   const [deleting, setDeleting] = useState<AdminCategoryRow | null>(null);
+  const [reordering, setReordering] = useState(false);
+
+  // Move a category up/down the saved order. Works on the full list by id, so
+  // it stays correct even while the table is searched or sorted.
+  const move = async (id: string, dir: -1 | 1) => {
+    const ids = categories.map((c) => c.id);
+    const index = ids.indexOf(id);
+    const target = index + dir;
+    if (index < 0 || target < 0 || target >= ids.length) return;
+    [ids[index], ids[target]] = [ids[target], ids[index]];
+    setReordering(true);
+    const res = await reorderCategories({ categoryIds: ids });
+    setReordering(false);
+    if (!res.ok) toast.error("Could not reorder", { description: res.error });
+    else router.refresh();
+  };
+
+  const firstId = categories[0]?.id;
+  const lastId = categories[categories.length - 1]?.id;
 
   const openCreate = () => {
     setEditing(null);
@@ -76,6 +95,35 @@ export function CategoryManager({
   };
 
   const columns: ColumnDef<AdminCategoryRow>[] = [
+    {
+      id: "order",
+      header: "Order",
+      enableHiding: false,
+      cell: ({ row }) => (
+        <div className="flex gap-0.5">
+          <Button
+            variant="ghost"
+            size="icon"
+            className="size-7"
+            aria-label={`Move ${row.original.name} up`}
+            disabled={reordering || row.original.id === firstId}
+            onClick={() => move(row.original.id, -1)}
+          >
+            <ChevronUp className="size-4" />
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="size-7"
+            aria-label={`Move ${row.original.name} down`}
+            disabled={reordering || row.original.id === lastId}
+            onClick={() => move(row.original.id, 1)}
+          >
+            <ChevronDown className="size-4" />
+          </Button>
+        </div>
+      ),
+    },
     {
       accessorKey: "name",
       header: "Name",

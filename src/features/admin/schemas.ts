@@ -82,6 +82,11 @@ export const blogPostSchema = z
   });
 export type BlogPostInput = z.infer<typeof blogPostSchema>;
 
+export const reorderCategoriesSchema = z.object({
+  categoryIds: z.array(z.string().min(1)).min(1),
+});
+export type ReorderCategoriesInput = z.infer<typeof reorderCategoriesSchema>;
+
 export const reorderLessonsSchema = z.object({
   courseId: z.string().min(1),
   videoIds: z.array(z.string().min(1)).min(1),

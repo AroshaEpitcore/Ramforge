@@ -48,7 +48,7 @@ export interface AdminVideoRow {
 
 export async function listCategoriesForAdmin(): Promise<AdminCategoryRow[]> {
   const rows = await db.category.findMany({
-    orderBy: { name: "asc" },
+    orderBy: [{ position: "asc" }, { name: "asc" }],
     include: {
       parent: { select: { name: true } },
       _count: { select: { videos: true, courses: true } },

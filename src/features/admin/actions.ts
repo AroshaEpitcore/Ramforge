@@ -4,6 +4,7 @@ import {
   assignLessonSectionSchema,
   categorySchema,
   courseSchema,
+  reorderCategoriesSchema,
   reorderLessonsSchema,
   reorderSectionsSchema,
   sectionSchema,
@@ -104,6 +105,25 @@ export async function deleteCategory(id: string): Promise<ActionResult> {
     if (e instanceof Prisma.PrismaClientKnownRequestError && e.code === "P2003") {
       return fail("Remove or reassign its videos and courses first.");
     }
+    return handleError(e);
+  }
+}
+
+export async function reorderCategories(raw: unknown): Promise<ActionResult> {
+  const parsed = reorderCategoriesSchema.safeParse(raw);
+  if (!parsed.success) return zerr(parsed.error);
+  const { categoryIds } = parsed.data;
+  try {
+    await authorize("categories:manage");
+    // No unique constraint on position, so a single pass is enough.
+    await db.$transaction(
+      categoryIds.map((id, i) => db.category.update({ where: { id }, data: { position: i } })),
+    );
+    revalidatePath("/admin/categories");
+    revalidatePath("/categories");
+    revalidatePath("/");
+    return { ok: true, data: undefined };
+  } catch (e) {
     return handleError(e);
   }
 }
