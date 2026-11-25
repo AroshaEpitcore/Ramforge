@@ -22,6 +22,7 @@ const FOLDERS: Record<string, { prefix: string; permission: Permission }> = {
   donate: { prefix: "donate", permission: "settings:manage" },
   promos: { prefix: "promos", permission: "settings:manage" },
   thumbnails: { prefix: "thumbnails", permission: "videos:upload" },
+  blog: { prefix: "blog", permission: "blog:manage" },
 };
 
 /**

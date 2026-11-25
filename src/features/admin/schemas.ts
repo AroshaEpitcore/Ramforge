@@ -62,16 +62,24 @@ export const videoSchema = z
   });
 export type VideoInput = z.infer<typeof videoSchema>;
 
-export const blogPostSchema = z.object({
-  id: z.string().optional(),
-  title: z.string().trim().min(2, "Enter a title").max(160),
-  slug: z.string().trim().max(80).optional(),
-  excerpt: z.string().trim().min(1, "Enter a short excerpt").max(300),
-  body: z.string().trim().min(1, "Enter the article body").max(50000),
-  coverImageUrl: z.string().trim().url("Enter an image URL").max(500).optional().or(z.literal("")),
-  status,
-  publishAt: z.string().optional(),
-});
+export const blogPostSchema = z
+  .object({
+    id: z.string().optional(),
+    title: z.string().trim().min(2, "Enter a title").max(160),
+    slug: z.string().trim().max(80).optional(),
+    excerpt: z.string().trim().min(1, "Enter a short excerpt").max(300),
+    // Optional when a PDF is attached (see refine); the PDF can be the article.
+    body: z.string().trim().max(50000).optional().or(z.literal("")),
+    // A full URL or an uploaded/site-relative path ("/api/assets/blog/…").
+    coverImageUrl: z.string().trim().max(500).optional().or(z.literal("")),
+    pdfUrl: z.string().trim().max(500).optional().or(z.literal("")),
+    status,
+    publishAt: z.string().optional(),
+  })
+  .refine((v) => !!(v.body && v.body.trim()) || !!(v.pdfUrl && v.pdfUrl.trim()), {
+    message: "Add an article body or upload a PDF",
+    path: ["body"],
+  });
 export type BlogPostInput = z.infer<typeof blogPostSchema>;
 
 export const reorderLessonsSchema = z.object({

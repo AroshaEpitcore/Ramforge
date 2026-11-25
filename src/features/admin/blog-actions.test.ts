@@ -120,16 +120,27 @@ describe("saveBlogPost · validation", () => {
     if (!res.ok) expect(res.fieldErrors?.excerpt?.length).toBeGreaterThan(0);
   });
 
-  it("rejects an empty body", async () => {
+  it("rejects an empty body with no PDF", async () => {
     const res = await saveBlogPost(post({ body: "" }));
     expect(res.ok).toBe(false);
     if (!res.ok) expect(res.fieldErrors?.body?.length).toBeGreaterThan(0);
   });
 
-  it("rejects a malformed cover image URL", async () => {
-    const res = await saveBlogPost(post({ coverImageUrl: "not-a-url" }));
-    expect(res.ok).toBe(false);
-    if (!res.ok) expect(res.fieldErrors?.coverImageUrl?.length).toBeGreaterThan(0);
+  it("allows an empty body when a PDF is attached", async () => {
+    const res = await saveBlogPost(post({ body: "", pdfUrl: "/api/assets/blog/doc.pdf" }));
+    expect(res.ok).toBe(true);
+    expect(createdData().pdfUrl).toBe("/api/assets/blog/doc.pdf");
+    expect(createdData().body).toBe("");
+  });
+
+  it("accepts an uploaded (relative) cover image path", async () => {
+    await saveBlogPost(post({ coverImageUrl: "/api/assets/blog/cover.jpg" }));
+    expect(createdData().coverImageUrl).toBe("/api/assets/blog/cover.jpg");
+  });
+
+  it("nulls a blank PDF url", async () => {
+    await saveBlogPost(post({ pdfUrl: "" }));
+    expect(createdData().pdfUrl).toBeNull();
   });
 });
 

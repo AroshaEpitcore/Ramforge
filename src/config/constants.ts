@@ -31,6 +31,15 @@ export const MAX_IMAGE_UPLOAD_BYTES = 4 * 1024 * 1024; // 4 MB
 /** Accepted image MIME type prefix for uploads. */
 export const ACCEPTED_IMAGE_MIME_PREFIX = "image/";
 
+/**
+ * Maximum accepted PDF upload size (bytes). Kept under Vercel's ~4.5 MB
+ * serverless request-body limit so PDFs post directly to a route handler.
+ */
+export const MAX_PDF_UPLOAD_BYTES = 4 * 1024 * 1024; // 4 MB
+
+/** Accepted document MIME type for PDF uploads. */
+export const ACCEPTED_PDF_MIME = "application/pdf";
+
 export const PAGE_SIZE = 12;
 export const PAGE_SIZE_OPTIONS = [12, 24, 48] as const;
 

@@ -11,7 +11,7 @@ export const runtime = "nodejs";
  * private video assets. Images are content-addressed (unique key per upload), so
  * they can be cached immutably and forever.
  */
-const ALLOWED_PREFIXES = ["banners/", "donate/", "thumbnails/", "promos/", "samples/"];
+const ALLOWED_PREFIXES = ["banners/", "donate/", "thumbnails/", "promos/", "samples/", "blog/"];
 
 export async function GET(req: NextRequest, ctx: { params: Promise<{ key: string[] }> }) {
   const { key: segments } = await ctx.params;

@@ -34,6 +34,7 @@ export async function getPublishedBlogPosts(limit?: number): Promise<BlogPost[]>
 
 export interface BlogPostDetail extends BlogPost {
   body: string;
+  pdfUrl: string | null;
   authorName: string | null;
 }
 
@@ -52,6 +53,7 @@ export async function getPublishedBlogPostBySlug(slug: string): Promise<BlogPost
     thumbnailUrl: coverFor(p.slug, p.coverImageUrl),
     publishedAt: (p.publishedAt ?? p.createdAt).toISOString(),
     body: p.body,
+    pdfUrl: p.pdfUrl,
     authorName: p.author?.name ?? null,
   };
 }
@@ -63,6 +65,7 @@ export interface AdminBlogPostRow {
   excerpt: string;
   body: string;
   coverImageUrl: string | null;
+  pdfUrl: string | null;
   status: "DRAFT" | "PUBLISHED" | "ARCHIVED";
   publishAt: string | null;
   authorName: string | null;
@@ -82,6 +85,7 @@ export async function listBlogPostsForAdmin(): Promise<AdminBlogPostRow[]> {
     excerpt: p.excerpt,
     body: p.body,
     coverImageUrl: p.coverImageUrl,
+    pdfUrl: p.pdfUrl,
     status: p.status,
     publishAt: p.publishAt ? p.publishAt.toISOString() : null,
     authorName: p.author?.name ?? null,

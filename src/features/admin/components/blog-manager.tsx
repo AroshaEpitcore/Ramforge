@@ -32,6 +32,8 @@ import {
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { deleteBlogPost, saveBlogPost } from "@/features/admin/blog-actions";
+import { ImageUploadField } from "@/features/admin/components/image-upload-field";
+import { PdfUploadField } from "@/features/admin/components/pdf-upload-field";
 import { blogPostSchema, type BlogPostInput } from "@/features/admin/schemas";
 import { formatDate } from "@/lib/formatters";
 import type { AdminBlogPostRow } from "@/server/queries/blog";
@@ -189,6 +191,7 @@ function BlogFormDialog({
       excerpt: editing?.excerpt ?? "",
       body: editing?.body ?? "",
       coverImageUrl: editing?.coverImageUrl ?? "",
+      pdfUrl: editing?.pdfUrl ?? "",
       status: editing?.status ?? "DRAFT",
       publishAt: editing?.publishAt ? editing.publishAt.slice(0, 16) : "",
     },
@@ -223,20 +226,28 @@ function BlogFormDialog({
             {errors.title && <p className="text-xs text-destructive">{errors.title.message}</p>}
           </div>
 
-          <div className="grid gap-4 sm:grid-cols-2">
-            <div className="grid gap-2">
-              <Label htmlFor="b-slug">Slug (optional)</Label>
-              <Input id="b-slug" placeholder="auto-generated" {...register("slug")} />
-              {errors.slug && <p className="text-xs text-destructive">{errors.slug.message}</p>}
-            </div>
-            <div className="grid gap-2">
-              <Label htmlFor="b-cover">Cover image URL (optional)</Label>
-              <Input id="b-cover" placeholder="https://…" {...register("coverImageUrl")} />
-              {errors.coverImageUrl && (
-                <p className="text-xs text-destructive">{errors.coverImageUrl.message}</p>
-              )}
-            </div>
+          <div className="grid gap-2">
+            <Label htmlFor="b-slug">Slug (optional)</Label>
+            <Input id="b-slug" placeholder="auto-generated" {...register("slug")} />
+            {errors.slug && <p className="text-xs text-destructive">{errors.slug.message}</p>}
           </div>
+
+          <Controller
+            control={control}
+            name="coverImageUrl"
+            render={({ field }) => (
+              <ImageUploadField
+                value={field.value ?? ""}
+                onChange={field.onChange}
+                folder="blog"
+                label="Cover image (optional)"
+                allowUrl
+                previewClassName="aspect-video h-auto"
+                hint="Shown at the top of the post and in the blog list — 16:9 works best (e.g. 1280×720 px)."
+                error={errors.coverImageUrl?.message as string | undefined}
+              />
+            )}
+          />
 
           <div className="grid gap-2">
             <Label htmlFor="b-excerpt">Excerpt</Label>
@@ -245,10 +256,24 @@ function BlogFormDialog({
           </div>
 
           <div className="grid gap-2">
-            <Label htmlFor="b-body">Body</Label>
+            <Label htmlFor="b-body">Body (optional if you attach a PDF)</Label>
             <Textarea id="b-body" rows={10} {...register("body")} />
             {errors.body && <p className="text-xs text-destructive">{errors.body.message}</p>}
           </div>
+
+          <Controller
+            control={control}
+            name="pdfUrl"
+            render={({ field }) => (
+              <PdfUploadField
+                value={field.value ?? ""}
+                onChange={field.onChange}
+                label="PDF article (optional)"
+                hint="Upload your blog as a PDF — readers can view and download it on the post page."
+                error={errors.pdfUrl?.message as string | undefined}
+              />
+            )}
+          />
 
           <div className="grid gap-4 sm:grid-cols-2">
             <div className="grid gap-2">

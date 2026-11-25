@@ -13,7 +13,7 @@ interface ImageUploadFieldProps {
   value: string;
   onChange: (url: string) => void;
   /** Upload target — selects the storage folder + required permission. */
-  folder: "banners" | "donate" | "thumbnails" | "promos";
+  folder: "banners" | "donate" | "thumbnails" | "promos" | "blog";
   label?: string;
   /** Guidance shown under the dropzone, e.g. recommended dimensions. */
   hint?: string;

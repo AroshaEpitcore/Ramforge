@@ -540,6 +540,8 @@ model BlogPost {
   // Article body (plain text / light markdown); rendered as paragraphs.
   body          String
   coverImageUrl String?
+  // Optional uploaded PDF (e.g. the full article as a document). Served via /api/assets.
+  pdfUrl        String?
   status        VideoStatus @default(DRAFT)
   // Scheduled publishing, matching the catalogue rule (see lib/publishing.ts).
   publishAt     DateTime?
