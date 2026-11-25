@@ -41,6 +41,7 @@ export interface AdminVideoRow {
   notes: string | null;
   publishAt: string | null;
   position: number;
+  durationSec: number;
   price: number;
   rentalDays: number | null;
   rentalPrice: number | null;
@@ -112,6 +113,7 @@ export async function listVideosForAdmin(): Promise<AdminVideoRow[]> {
     notes: v.notes,
     publishAt: v.publishAt ? v.publishAt.toISOString() : null,
     position: v.position,
+    durationSec: v.durationSec,
     price: v.price,
     rentalDays: v.rentalDays,
     rentalPrice: v.rentalPrice,

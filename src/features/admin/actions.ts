@@ -66,6 +66,13 @@ function handleError(e: unknown): ActionResult<never> {
 
 const toMinor = (major: number) => Math.round(major * 100);
 const toDate = (v?: string) => (v && v.trim() ? new Date(v) : null);
+/** Parse "mm:ss" / "h:mm:ss" / plain seconds to a second count (0 if blank). */
+const toSeconds = (v?: string): number => {
+  const t = (v ?? "").trim();
+  if (!t) return 0;
+  if (!t.includes(":")) return Math.max(0, Math.round(Number(t) || 0));
+  return t.split(":").reduce((acc, part) => acc * 60 + (Number(part) || 0), 0);
+};
 /** Empty / whitespace string → null (for optional DB columns). */
 const nullify = (v?: string | null) => (v && v.trim() ? v.trim() : null);
 
@@ -320,6 +327,7 @@ export async function saveVideo(raw: unknown): Promise<ActionResult<{ id: string
       slug,
       description: d.description,
       thumbnailUrl: nullify(d.thumbnailUrl),
+      durationSec: toSeconds(d.duration),
       categoryId: d.categoryId,
       courseId,
       position: courseId ? d.position : 0,

@@ -40,6 +40,13 @@ export const videoSchema = z
     description: z.string().trim().min(1, "Enter a description").max(2000),
     // A full URL or a site-relative/uploaded path ("/api/assets/thumbnails/…").
     thumbnailUrl: z.string().trim().max(500).optional(),
+    // Length as mm:ss / h:mm:ss / plain seconds (parsed in the action). Empty = unset.
+    duration: z
+      .string()
+      .trim()
+      .max(10)
+      .refine((v) => v === "" || /^\d+$|^\d{1,2}(:\d{2}){1,2}$/.test(v), "Use mm:ss (e.g. 12:30)")
+      .optional(),
     categoryId: z.string().min(1, "Choose a category"),
     courseId: z.string().optional(),
     position: z.number().int().min(0).max(999),

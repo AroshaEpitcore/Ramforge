@@ -34,6 +34,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { deleteVideo, saveVideo } from "@/features/admin/actions";
 import { ImageUploadField } from "@/features/admin/components/image-upload-field";
 import { videoSchema, type VideoInput } from "@/features/admin/schemas";
+import { formatDuration } from "@/lib/formatters";
 import type { AdminVideoRow } from "@/server/queries/admin";
 import { zodResolver } from "@hookform/resolvers/zod";
 import type { ColumnDef } from "@tanstack/react-table";
@@ -215,6 +216,7 @@ function VideoFormDialog({
       slug: editing?.slug ?? "",
       description: editing?.description ?? "",
       thumbnailUrl: editing?.thumbnailUrl ?? "",
+      duration: editing?.durationSec ? formatDuration(editing.durationSec) : "",
       categoryId: editing?.categoryId ?? "",
       courseId: editing?.courseId ?? "",
       position: editing?.position ?? 0,
@@ -488,6 +490,18 @@ function VideoFormDialog({
               <Label htmlFor="v-publish">Publish at (optional)</Label>
               <Input id="v-publish" type="datetime-local" {...register("publishAt")} />
             </div>
+          </div>
+
+          <div className="grid gap-2">
+            <Label htmlFor="v-duration">Duration (optional)</Label>
+            <Input id="v-duration" placeholder="e.g. 12:30" {...register("duration")} />
+            <p className="text-xs text-muted-foreground">
+              Shown on the card and video page. Use mm:ss (e.g. 12:30) or h:mm:ss. Uploaded (Mux)
+              videos fill this in automatically.
+            </p>
+            {errors.duration && (
+              <p className="text-xs text-destructive">{errors.duration.message}</p>
+            )}
           </div>
 
           <div className="grid gap-2">

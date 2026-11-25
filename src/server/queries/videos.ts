@@ -107,6 +107,18 @@ function toVideo(v: VideoRow, agg?: { avg: number; count: number }): Video {
   };
 }
 
+/**
+ * Increment a video's view counter. Fire-and-forget from the detail page;
+ * never throws (a missing/deleted video must not break the page).
+ */
+export async function recordVideoView(id: string): Promise<void> {
+  try {
+    await db.video.update({ where: { id }, data: { viewCount: { increment: 1 } } });
+  } catch {
+    /* ignore */
+  }
+}
+
 /** Approved-review aggregates (avg rating + count) keyed by video id. */
 async function reviewAggregates(videoIds: string[]) {
   if (videoIds.length === 0) return new Map<string, { avg: number; count: number }>();

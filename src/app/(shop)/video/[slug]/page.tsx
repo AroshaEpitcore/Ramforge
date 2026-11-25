@@ -24,6 +24,7 @@ import {
   getPublishedVideoBySlug,
   getRelatedVideos,
   listApprovedReviews,
+  recordVideoView,
 } from "@/server/queries/videos";
 import { listPublishedBundles } from "@/server/queries/bundles";
 import { getCurrentUser } from "@/server/current-user";
@@ -47,6 +48,9 @@ export default async function VideoDetailsPage({ params }: { params: Promise<{ s
   const { slug } = await params;
   const video = await getPublishedVideoBySlug(slug);
   if (!video) notFound();
+
+  // Count this visit (fire-and-forget; never blocks or breaks the page).
+  void recordVideoView(video.id);
 
   const [related, reviews, paymentsEnabled, videoBanner, donateImageUrl, bundles, user] =
     await Promise.all([

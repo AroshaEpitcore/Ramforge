@@ -36,6 +36,7 @@ export async function POST(req: NextRequest) {
   const data = event.data as {
     passthrough?: string | null;
     playback_ids?: { id: string; policy?: string }[] | null;
+    duration?: number | null;
   };
   const videoId = data.passthrough ?? undefined;
 
@@ -48,7 +49,14 @@ export async function POST(req: NextRequest) {
       if (playbackId) {
         await db.video.update({
           where: { id: videoId },
-          data: { fullAssetId: playbackId, uploadStatus: "READY" },
+          data: {
+            fullAssetId: playbackId,
+            uploadStatus: "READY",
+            // Mux reports the asset length; store it so the card/page show it.
+            ...(typeof data.duration === "number" && data.duration > 0
+              ? { durationSec: Math.round(data.duration) }
+              : {}),
+          },
         });
       }
     } else if (videoId && event.type === "video.asset.errored") {
