@@ -5,6 +5,7 @@ import { MobileNav } from "@/components/layout/mobile-nav";
 import { SearchTrigger } from "@/components/layout/search-trigger";
 import { UserMenu } from "@/components/layout/user-menu";
 import { Logo } from "@/components/shared/logo";
+import { SnowToggle } from "@/components/shared/snow";
 import { ThemeToggle } from "@/components/shared/theme-toggle";
 import { Button } from "@/components/ui/button";
 import { listPublishedVideos } from "@/server/queries/videos";
@@ -49,6 +50,7 @@ export async function StorefrontNavbar({ user }: { user: SessionUser | null }) {
             </Link>
           </Button>
           <CartButton />
+          <SnowToggle />
           <ThemeToggle />
           <div className="ml-1">
             <UserMenu user={user} />

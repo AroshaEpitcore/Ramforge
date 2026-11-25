@@ -266,3 +266,31 @@
   background-size: 200% 100%;
   animation: shimmer 1.6s linear infinite;
 }
+
+/* Festive snowfall (toggled in the navbar). Light and GPU-friendly. */
+@keyframes snow-fall {
+  0% {
+    transform: translate3d(0, -10vh, 0);
+  }
+  100% {
+    transform: translate3d(var(--snow-drift, 0px), 110vh, 0);
+  }
+}
+
+.snow-flake {
+  position: absolute;
+  top: 0;
+  border-radius: 9999px;
+  background: #fff;
+  will-change: transform;
+  animation-name: snow-fall;
+  animation-timing-function: linear;
+  animation-iteration-count: infinite;
+}
+
+/* Never animate snow for reduced-motion users. */
+@media (prefers-reduced-motion: reduce) {
+  .snow-layer {
+    display: none;
+  }
+}
