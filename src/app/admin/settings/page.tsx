@@ -8,6 +8,7 @@ import {
   getVatRatePercent,
   getVideoBanner,
   isPaymentsEnabled,
+  isSnowEnabled,
 } from "@/server/services/settings";
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
@@ -19,11 +20,12 @@ export default async function AdminSettingsPage() {
   if (!user) redirect("/login?callbackUrl=/admin/settings");
   requirePermission(user, "settings:manage");
 
-  const [paymentsEnabled, vatRate, donateImageUrl, videoBanner] = await Promise.all([
+  const [paymentsEnabled, vatRate, donateImageUrl, videoBanner, snowEnabled] = await Promise.all([
     isPaymentsEnabled(),
     getVatRatePercent(),
     getDonateImageUrl(),
     getVideoBanner(),
+    isSnowEnabled(),
   ]);
 
   return (
@@ -34,6 +36,7 @@ export default async function AdminSettingsPage() {
         vatRate={vatRate}
         donateImageUrl={donateImageUrl}
         videoBanner={videoBanner}
+        snowEnabled={snowEnabled}
       />
     </div>
   );

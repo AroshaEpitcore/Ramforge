@@ -382,6 +382,18 @@ export async function setPaymentsEnabled(enabled: boolean): Promise<ActionResult
   }
 }
 
+export async function setSnowEnabled(enabled: boolean): Promise<ActionResult> {
+  try {
+    await authorize("settings:manage");
+    await setSetting(SETTING_KEYS.snowEnabled, enabled);
+    revalidatePath("/admin/settings");
+    revalidatePath("/", "layout");
+    return { ok: true, data: undefined };
+  } catch (e) {
+    return handleError(e);
+  }
+}
+
 export async function setVatRate(percent: number): Promise<ActionResult> {
   try {
     await authorize("settings:manage");

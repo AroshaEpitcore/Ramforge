@@ -9,6 +9,7 @@ import {
   exportNewsletterCsv,
   setDonateImage,
   setPaymentsEnabled,
+  setSnowEnabled,
   setVatRate,
   setVideoBanner,
 } from "@/features/admin/actions";
@@ -23,15 +24,19 @@ export function SettingsPanel({
   vatRate,
   donateImageUrl,
   videoBanner,
+  snowEnabled,
 }: {
   paymentsEnabled: boolean;
   vatRate: number;
   donateImageUrl: string | null;
   videoBanner: { imageUrl: string; href: string } | null;
+  snowEnabled: boolean;
 }) {
   const router = useRouter();
   const [enabled, setEnabled] = useState(paymentsEnabled);
   const [saving, startSaving] = useTransition();
+  const [snow, setSnow] = useState(snowEnabled);
+  const [savingSnow, startSnow] = useTransition();
   const [exporting, setExporting] = useState(false);
   const [vat, setVat] = useState(vatRate);
   const [savingVat, setSavingVat] = useState(false);
@@ -73,6 +78,20 @@ export function SettingsPanel({
       toast.success("VAT rate saved");
       router.refresh();
     }
+  };
+
+  const toggleSnow = (next: boolean) => {
+    setSnow(next); // optimistic
+    startSnow(async () => {
+      const res = await setSnowEnabled(next);
+      if (!res.ok) {
+        setSnow(!next);
+        toast.error("Could not update", { description: res.error });
+      } else {
+        toast.success(next ? "Snow turned on" : "Snow turned off");
+        router.refresh();
+      }
+    });
   };
 
   const togglePayments = (next: boolean) => {
@@ -121,6 +140,22 @@ export function SettingsPanel({
           <Label className="flex items-center gap-3 font-normal">
             <Switch checked={enabled} onCheckedChange={togglePayments} disabled={saving} />
             Payments enabled
+          </Label>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Festive snow</CardTitle>
+          <CardDescription>
+            Show a light snowfall effect across the storefront. Great for the holidays; turn it off
+            any time. It never shows in the admin area.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Label className="flex items-center gap-3 font-normal">
+            <Switch checked={snow} onCheckedChange={toggleSnow} disabled={savingSnow} />
+            Snowfall enabled
           </Label>
         </CardContent>
       </Card>

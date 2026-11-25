@@ -2,7 +2,6 @@
 
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { ThemeProvider } from "@/components/theme-provider";
-import { SnowProvider } from "@/components/shared/snow";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { NuqsAdapter } from "nuqs/adapters/next/app";
 import { useState, type ReactNode } from "react";
@@ -28,9 +27,7 @@ export function Providers({ children }: { children: ReactNode }) {
     <ThemeProvider attribute="class" defaultTheme="dark" enableSystem disableTransitionOnChange>
       <QueryClientProvider client={queryClient}>
         <NuqsAdapter>
-          <TooltipProvider delayDuration={200}>
-            <SnowProvider>{children}</SnowProvider>
-          </TooltipProvider>
+          <TooltipProvider delayDuration={200}>{children}</TooltipProvider>
         </NuqsAdapter>
       </QueryClientProvider>
     </ThemeProvider>

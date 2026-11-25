@@ -13,6 +13,7 @@ export const SETTING_KEYS = {
   vatRatePercent: "tax.vatRatePercent",
   donateImageUrl: "donate.imageUrl",
   videoBanner: "video.banner",
+  snowEnabled: "effects.snow",
 } as const;
 
 export interface VideoBanner {
@@ -37,6 +38,11 @@ export async function setSetting(key: string, value: Prisma.InputJsonValue): Pro
 /** Whether paid courses/videos are currently sellable. Off by default. */
 export async function isPaymentsEnabled(): Promise<boolean> {
   return getSetting<boolean>(SETTING_KEYS.paymentsEnabled, false);
+}
+
+/** Whether the festive snow effect shows on the storefront. On by default. */
+export async function isSnowEnabled(): Promise<boolean> {
+  return getSetting<boolean>(SETTING_KEYS.snowEnabled, true);
 }
 
 /** Flat VAT/sales-tax rate as a percentage (0 = no tax). */
