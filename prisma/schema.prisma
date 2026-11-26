@@ -556,3 +556,23 @@ model BlogPost {
   @@index([status])
   @@index([publishedAt])
 }
+
+/// A downloadable asset/resource shown on the public /assets page. Each asset is
+/// either an external link (e.g. Google Drive) or a file uploaded from the admin.
+model Asset {
+  id           String      @id @default(cuid())
+  title        String
+  slug         String      @unique
+  description  String?
+  thumbnailUrl String?
+  // Source: an external link (Drive, etc.) OR an uploaded file served via /api/assets.
+  externalUrl  String?
+  fileUrl      String?
+  status       VideoStatus @default(DRAFT)
+  // Manual display order (ascending); lower shows first.
+  position     Int         @default(0)
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
+
+  @@index([status])
+}

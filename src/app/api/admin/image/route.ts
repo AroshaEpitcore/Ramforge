@@ -23,6 +23,7 @@ const FOLDERS: Record<string, { prefix: string; permission: Permission }> = {
   promos: { prefix: "promos", permission: "settings:manage" },
   thumbnails: { prefix: "thumbnails", permission: "videos:upload" },
   blog: { prefix: "blog", permission: "blog:manage" },
+  assets: { prefix: "assets", permission: "assets:manage" },
 };
 
 /**

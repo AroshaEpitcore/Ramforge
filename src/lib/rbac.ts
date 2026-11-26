@@ -14,6 +14,7 @@ export const PERMISSIONS = [
   "videos:upload",
   "categories:manage",
   "bundles:manage",
+  "assets:manage",
   // Pricing & marketing
   "prices:update",
   "coupons:manage",
@@ -61,6 +62,7 @@ export const ROLE_PERMISSIONS: Record<Role, Permission[]> = {
     "videos:upload",
     "categories:manage",
     "bundles:manage",
+    "assets:manage",
     "prices:update",
     "coupons:manage",
     "banners:manage",

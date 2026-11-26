@@ -40,6 +40,12 @@ export const MAX_PDF_UPLOAD_BYTES = 4 * 1024 * 1024; // 4 MB
 /** Accepted document MIME type for PDF uploads. */
 export const ACCEPTED_PDF_MIME = "application/pdf";
 
+/**
+ * Maximum accepted downloadable-asset file size (bytes). Kept under Vercel's
+ * ~4.5 MB serverless request-body limit; use an external link for larger files.
+ */
+export const MAX_ASSET_UPLOAD_BYTES = 4 * 1024 * 1024; // 4 MB
+
 export const PAGE_SIZE = 12;
 export const PAGE_SIZE_OPTIONS = [12, 24, 48] as const;
 

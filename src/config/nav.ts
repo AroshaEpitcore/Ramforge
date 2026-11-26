@@ -6,6 +6,7 @@ import {
   BarChart3,
   Boxes,
   Clapperboard,
+  FolderDown,
   FolderTree,
   GraduationCap,
   Image,
@@ -47,6 +48,7 @@ export const mainNav: NavItem[] = [
   { title: "Shop", href: "/shop", description: "Browse the full catalogue" },
   { title: "Courses", href: "/courses", description: "Structured, lesson-by-lesson" },
   { title: "Bundles", href: "/bundles", description: "Save with video packs" },
+  { title: "Assets", href: "/assets", description: "Free downloadable resources" },
   { title: "Blog", href: "/blog", description: "News and tutorials" },
   { title: "About", href: "/about" },
   { title: "Contact", href: "/contact" },
@@ -111,6 +113,7 @@ export const adminNav: NavGroup[] = [
         permission: "categories:manage",
       },
       { title: "Bundles", href: "/admin/bundles", icon: Boxes, permission: "bundles:manage" },
+      { title: "Assets", href: "/admin/assets", icon: FolderDown, permission: "assets:manage" },
     ],
   },
   {

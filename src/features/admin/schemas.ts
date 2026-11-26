@@ -89,6 +89,31 @@ export const blogPostSchema = z
   });
 export type BlogPostInput = z.infer<typeof blogPostSchema>;
 
+export const assetSchema = z
+  .object({
+    id: z.string().optional(),
+    title: z.string().trim().min(2, "Enter a title").max(160),
+    slug: z.string().trim().max(80).optional(),
+    description: z.string().trim().max(2000).optional(),
+    thumbnailUrl: z.string().trim().max(500).optional().or(z.literal("")),
+    // A full URL (e.g. Google Drive) — the primary source for large files.
+    externalUrl: z
+      .string()
+      .trim()
+      .max(1000)
+      .refine((v) => v === "" || /^https?:\/\//i.test(v), "Enter a valid link (https://…)")
+      .optional(),
+    // An uploaded file path ("/api/assets/assets/…").
+    fileUrl: z.string().trim().max(500).optional().or(z.literal("")),
+    status,
+    position: z.number().int().min(0).max(999),
+  })
+  .refine((v) => !!(v.externalUrl && v.externalUrl.trim()) || !!(v.fileUrl && v.fileUrl.trim()), {
+    message: "Add a link or upload a file",
+    path: ["externalUrl"],
+  });
+export type AssetInput = z.infer<typeof assetSchema>;
+
 export const reorderCategoriesSchema = z.object({
   categoryIds: z.array(z.string().min(1)).min(1),
 });
